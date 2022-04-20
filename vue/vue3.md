@@ -189,7 +189,7 @@ setup() {
 
 # 生命周期钩子
 
-<img src="../img/image-20220420195532338.png" alt="image-20220420195532338" style="zoom:50%;" />
+<img src="../img/image-20220420210136637.png" alt="image-20220420210136637" style="zoom:50%;" />
 
 + vue3生命周期只是unmounted系列发生了变化，相对vue2有新增
 + 在composition API中，setup里采取加on前缀，且setup替代了beforeCreate和created
