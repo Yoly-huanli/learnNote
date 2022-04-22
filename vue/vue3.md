@@ -509,6 +509,9 @@ export default defineComponent({
 ## 2.父子，祖孙通信 $attrs
 
 + $attrs可以获取上一级传递过来的所有属性
++ inheritAttrs:false,避免属性附着到单节点上
++ v-bind="$attrs"把当前以及上级的attrs都透传到下一级
++ vue3补在有$listeners
 
 ```vue
 //父组件Level1，传递了参数A\B\C,和对应的方法getA,getB,getC
@@ -595,18 +598,28 @@ export default defineComponent({
 
 此时created的this.$attrs可以获取到['B', 'C', 'onGetB', 'onGetC']，而且此时Level2只有一个节点（有多个节点不会出现此现象），其他没有被接收的节点都附着在该节点上
 
-```
+```vue
 <div class="container" b="level1B" c="level1C">      <p>level2</p>
 </div>
 ```
 
 此时也可以通过设置使得其他没有引入的属性不能附着在节点上
 
-```
+```js
 inheritAttrs:false,
 ```
 
+假设Level2有另一个子组件Level3,那么在Level3上可以通过v-bind="$attrs"把Level1和Level2的属性都传递过去
 
+```js
+<template>
+  <!-- eslint-disable -->
+  <div class="container">
+    <p>level2</p>
+    <Level3 v-bind="$attrs"></Level3>
+  </div>
+</template>
+```
 
 ## 3.父子通信$parent
 
@@ -672,9 +685,8 @@ level1 Proxy {l2: Proxy, l3: Proxy}
 
 ## 5.祖孙多层级通信provide
 
-provide注入元素，inject引用元素，可以跨层级引用
-
-Level1,Level2,Level3是层层嵌套的三层，level1注入，level3可以不通过level2直接拿到
++ provide注入元素，inject引用元素，可以跨层级,Level1,Level2,Level3是层层嵌套的三层，level1注入，level3可以不通过level2直接拿到
++ provide有两种方法传递，一种只传值，provide:{helllo:this.hello}一种通过函数的方式传递引用，可以实现响应式
 
 ```vue
 //Level1
@@ -758,11 +770,11 @@ export default defineComponent({
 </script>
 ```
 
-## 6.自定义事件
+## 6.任意组件通信自定义事件
 
 - 一个在method里自定义事件
 
-```
+```js
 addTitleHandler(title) {
     // eslint-disable-next-line
     console.log('on add title', title)
@@ -776,24 +788,59 @@ mounted() {
 
 - 另一个组件里使用
 
-```
+```js
 event.$emit('onAddTitle', this.title)
 ```
 
 - 其中的event
 
-```
+```js
 import event from './event'
 // Vue本身可以自定义事件
 import Vue from 'vue'
 export default new Vue()
 ```
 
-```
+```js
 beforeDestroy() {
     // 及时销毁，否则可能造成内存泄露
     event.$off('onAddTitle', this.addTitleHandler)
 }
+```
+
++ 在vue3，没有new Vue(),需要使用第三方插件，比如mitt,npm install mitt --save
+
+```
+// utils/event.js
+import mitt from 'mitt'
+export default new mitt()
+```
+
+组件使用，emit触发事件，on监听，off销毁,且注意函数名相同，不能用箭头函数
+
+```js
+import event from '../utils/event.js';
+ mounted(){
+    event.emit('Level1show','hhhh')
+  }
+...
+另一个组件
+import event from '../utils/event.js';
+
+export default defineComponent({
+  name: "Level3",
+  methods:{
+    showMsg(msg:any){
+      console.log('Level1Content',msg)
+    }
+  },
+  mounted(){
+    event.on('Level1show',this.showMsg)
+  },
+  unmounted(){
+     event.off('Level1show',this.showMsg)
+  }
+});
 ```
 
 ## 7.vuex

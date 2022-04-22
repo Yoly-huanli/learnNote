@@ -8,8 +8,6 @@
 
 # 基础使用
 
-官网：https://jestjs.io/zh-Hans/docs/getting-started
-
 安装方法：
 
 ## 匹配器
