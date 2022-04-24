@@ -199,3 +199,24 @@ map4.set('k2', 2).set('k3', 4).set('k4', 5)
 
 # proxy
 
+代理，拦截器，当obj.count会触发get，obj.count=1会触发set,proxy可能会有this的指向问题，Reflect的作用则是可以获取到内部的方法，可以用Reflect.get替换原本的get
+
+```javascript
+var obj = new Proxy({}, {
+  get: function (target, propKey, receiver) {
+    console.log(`getting ${propKey}!`);
+    return Reflect.get(target, propKey, receiver);
+  },
+  set: function (target, propKey, value, receiver) {
+    console.log(`setting ${propKey}!`);
+    return Reflect.set(target, propKey, value, receiver);
+  }
+});
+```
+
+或者
+
+```
+var proxy = new Proxy(target, handler);
+```
+
