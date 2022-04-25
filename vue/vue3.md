@@ -6,6 +6,17 @@ https://juejin.cn/post/6909247394904702984#heading-22
 
 https://www.yuque.com/nxtt7g/kompdt/snbu3x
 
+# Vue3.0的新特性
+
++ performance
++ tree- shaking support
++ composition API
++ TS support
++ Fragment
++ Suspense
++ Teleport
++ custom render API
+
 # vue3起步
 
 文档

@@ -2,7 +2,7 @@
 
 # 简介
 
-是一个测试工具
+是一个单元测试工具
 
 官网：https://www.jestjs.cn/docs/getting-started
 
@@ -32,3 +32,7 @@
 
 + toBeNull,toBeUndefined,toBeDefined:检测是否为null,undefined...
 + toBeTruthy,toBeFalsy: if语句所判断的真或者假
+
+# 调试
+
+安装vscode的插件jest,然后点击debug可以开始进入调试

@@ -197,6 +197,61 @@ map4.set('k2', 2).set('k3', 4).set('k4', 5)
         键名是弱引用，键值可以是任意的，键名所指向的对象可以被垃圾回收，此时键名是无效的
         不能遍历，方法有get、set、has、delete
 
+# 箭头函数
+
+### 与普通函数的区别
+
+```js
+1.箭头函数没有arguments，可以访问外围函数的 arguments 对象
+2.箭头函数没有prototype属性，不能用作构造函数（不能用new关键字调用）
+3.箭头函数没有自己this，它的this是词法的，引用的是上下文的this，即在你写这行代码的时候就箭头函数的this就已经和外层执行上下文的this绑定了，要通过作用域链来确定，不能用 call()、apply()、bind() 这些方法改变 this 的指向
+4.不可以使用 yield 命令，因此箭头函数不能用作 Generator 函数。
+```
+
+JavaScript函数两个内部方法: [[Call]]和[[Construct]]
+
+```
+直接调用时执行[[Call]]方法, 直接执行函数体
+new调用时执行[[Construct]]方法, 创建一个实例对象
+```
+
+### 正确写法
+
+- 支持默认值
+- 展开运算符
+
+```
+const sum=(x1,x2)=>{console.log(x1+x2)}
+arr=[3,2]
+sum(...arr)
+```
+
+- 例子(字节面经)
+
+```
+let a = (x) => x
+let b = (x) => {x;}
+let c = (x) => {{x;}}
+console.log(a(1), b(1), c(1));//1，undefined,undefined
+
+babel解析结果
+var a = function a(x) {
+  return x;
+};
+
+var b = function b(x) {
+  x;
+};
+
+var c = function c(x) {
+  {
+    x;
+  }
+};
+```
+
+
+
 # proxy
 
 代理，拦截器，当obj.count会触发get，obj.count=1会触发set,proxy可能会有this的指向问题，Reflect的作用则是可以获取到内部的方法，可以用Reflect.get替换原本的get
@@ -219,4 +274,3 @@ var obj = new Proxy({}, {
 ```
 var proxy = new Proxy(target, handler);
 ```
-
