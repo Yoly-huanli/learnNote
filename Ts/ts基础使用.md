@@ -1,5 +1,7 @@
 [toc]
 
+学习文档：https://www.tslang.cn/docs/handbook/generics.html
+
 # 介绍
 
 typescript的重点在于type，表示类型，会进行强制类型的限制，有这样一些好处：
@@ -88,6 +90,17 @@ function(a,b){
 包括union组合类型，nullable可空类型、literal预定义类型等
 
 
+
+# 泛型
+
+```js
+function identity<T>(arg: T): T {
+    return arg;
+}
+或者：let myIdentity: <T>(arg: T) => T = identity;
+```
+
+限制输入和输出的类型必须是一致的，identity<T>这里是捕获输入的类型
 
 # 注释
 
