@@ -27,85 +27,7 @@
   >
   > arr[Symbol.iterator] ()里有next()
 
-## 2. js里数字精度问题
-
-- JS 采用 IEEE 754 双精度版本（64位）,数字都用二进制表示
-
-```js
-sign(符号): 占 1 bit, 表示正负;
-exponent(指数): 占 11 bit，表示范围;
-mantissa(尾数): 占 52 bit，表示精度，多出的末尾如果是 1 需要进位;
-
-//因此安全数是2^53
-
-// (0011) 表示循环
-0.1 = 2^-4 * 1.10011(0011)
-```
-
-- 最大值指的是2的53次幂-1，超过安全整数范围在计算时会有误差。在ES6中被定义为Number.MAX_SAFE_INTEGER和Number.MIN_SAFE_INTEGER。当超过整数范围时会返回infinity。
-
-### 0.1+0.2!==0.3
-
-很多小数用二进制表示都是无限循环的,JS把循环的超出的部分截掉了,因此0.1+0.2！==0.3
-
-```
-0.200000000000000002 === 0.2 // true
-```
-
-**console.log**
-
-```
-console.log(0.100000000000000002) // 0.1
-```
-
-因为发生了近似转换，二进制被转换为了十进制，十进制又被转换为了字符串，近似转换结果就为0.1
-
-**解决办法**
-
-- 针对大数的整数可以考虑使用 bigint 类型
-- 保留位数
-- 使用已有的库
-
-```
-parseFloat((0.1 + 0.2).toFixed(10)) === 0.3 // true
-```
-
-### 大数失真
-
-开发中遇到shopId等前后端传输数字过大，超过了2^53，也就是约16位数字，后续的数字自动编舞了0.需要使用字符串表示
-
-## 3.['1','2','3'].map(parseInt)输出什么
-
-+ parseInt
-
-```
-parseInt(str,radix):将字符串转化为数字
-str:字符串
-radix:进制，可以取2-36，默认当做10进制
-```
-
-```
-['1','2','3'].map(parseInt)
-等效于
-['1','2','3'].map((item,index)=>parseInt(item,index))
-也就是
-parseInt(’1‘,0) // 当做10进制，只为1
-parseInt(’2‘,1) //NaN，1进制不能取2
-parseInt(’3‘,2) //NaN  2进制不能取3
-```
-
-其他特殊处理
-
-```
-字符串以’0x‘开头，会默认当做16进制处理
-字符串以’0‘开头，会默认当做8进制处理（es5取消了，0开头会被忽略）
-parseInt("0xA")  //得到10，当做16进制处理
-parseInt("011")  //得到11,当做10进制处理
-```
-
-
-
-## 4. dns-prefetch/preconnect
+## 2. dns-prefetch/preconnect
 
 + Dns-prefetch是DNS预查询
 + preconnect是DNS预连接
@@ -119,3 +41,15 @@ parseInt("011")  //得到11,当做10进制处理
 <link rel="preload" href="main.js">
 ```
 
+## 3..为什么普通 for 循环的性能远远高于 forEach 的性能
+
++ for 循环没有任何额外的函数调用栈和上下文；
++ forEach函数签名实际上是
+
+
+```
+array.forEach(function(currentValue, index, arr), thisValue)
+```
+
+
+它不是普通的 for 循环的语法糖，还有诸多参数和上下文需要在执行的时候考虑进来，这里可能拖慢性能；新版本v8优化之后已经相差不大。

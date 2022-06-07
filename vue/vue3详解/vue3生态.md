@@ -1,6 +1,234 @@
 [toc]
 
+# vue-router
 
+## 原理
+
+**改变视图的同时不会向后端发出请求**
+
+## hash模式
+
+通过url的哈希值来进行路由，加载不同组件
+
+```
+http://localhost/#/a
+http://localhost/#/b
+```
+
+此时#/a，#/b是哈希值，但是url发送请求不会带这个哈希值，所以不会重新加载页面
+
+## history模式
+
+```
+http://localhost/a
+http://localhost/b
+```
+
+利用 HTML5 History Interface 中新增的 `pushState()` 和 `replaceState()` 方法，此时虽然改变了当前的 URL，但浏览器不会立即向后端发送请求。
+
+## MemoryHistory(abstract history)模式
+
+相当于一个tab，一直在当前页面
+
+
+
+## vue-router v4.x
+
+官网https://router.vuejs.org/zh/introduction.html
+
+### 简单应用
+
+```vue
+<script src="https://unpkg.com/vue@3"></script>
+<script src="https://unpkg.com/vue-router@4"></script>
+
+<div id="app">
+  <h1>Hello App!</h1>
+  <p>
+    <!--使用 router-link 组件进行导航 -->
+    <!--通过传递 `to` 来指定链接 -->
+    <!--`<router-link>` 将呈现一个带有正确 `href` 属性的 `<a>` 标签-->
+    <router-link to="/">Go to Home</router-link>
+    <router-link to="/about">Go to About</router-link>
+  </p>
+  <!-- 路由出口 -->
+  <!-- 路由匹配到的组件将渲染在这里 -->
+  <router-view></router-view>
+</div>
+```
+
+router-link: 请注意，我们没有使用常规的 `a` 标签，而是使用一个自定义组件 `router-link` 来创建链接。这使得 Vue Router 可以在不重新加载页面的情况下更改 URL，处理 URL 的生成以及编码
+
+js
+
+```js
+// 1. 定义路由组件.
+// 也可以从其他文件导入
+const Home = { template: '<div>Home</div>' }
+const About = { template: '<div>About</div>' }
+
+// 2. 定义一些路由
+// 每个路由都需要映射到一个组件。
+// 我们后面再讨论嵌套路由。
+const routes = [
+  { path: '/', component: Home },
+  { path: '/about', component: About },
+]
+
+// 3. 创建路由实例并传递 `routes` 配置
+// 你可以在这里输入更多的配置，但我们在这里
+// 暂时保持简单
+const router = VueRouter.createRouter({
+  // 4. 内部提供了 history 模式的实现。为了简单起见，我们在这里使用 hash 模式。
+  history: VueRouter.createWebHashHistory(),
+  routes, // `routes: routes` 的缩写
+})
+
+// 5. 创建并挂载根实例
+const app = Vue.createApp({})
+//确保 _use_ 路由实例使
+//整个应用支持路由。
+app.use(router)
+
+app.mount('#app')
+
+// 现在，应用已经启动了！
+```
+
+通过调用 `app.use(router)`，我们可以在任意组件中以 `this.$router` 的形式访问它，并且以 `this.$route` 的形式访问当前路由：
+
+```vue
+// Home.vue
+export default {
+  computed: {
+    username() {
+      // 我们很快就会看到 `params` 是什么
+      return this.$route.params.username
+    },
+  },
+  methods: {
+    goToDashboard() {
+      if (isAuthenticated) {
+        this.$router.push('/dashboard')
+      } else {
+        this.$router.push('/login')
+      }
+    },
+  },
+}
+```
+
+### 其他用法
+
++ 动态路由
+
++ 路由匹配语法（正则、可重复的参数、Sensitive 与 strict 路由配置、可选参数）
+
++ 嵌套路由
+
++ 编程式导航（用**`this.$router.push`**而不是<router-link>）
+
++ 命名路由（<router-link :to="{ name: 'user', params: { username: 'erina' }}">）
+
++ 重定向和别名
+
++ 路由组件传参（直接将参数放在路由里配置，不需要通过this.$route.params才能获取）
+
++ 导航守卫（一些钩子，可以判断路由跳转前、后然后做一些操作）
+
+  ```vue
+   router.beforeEach(async (to, from) => {
+     if (
+       // 检查用户是否已登录
+       !isAuthenticated &&
+       // ❗️ 避免无限重定向
+       to.name !== 'Login'
+     ) {
+       // 将用户重定向到登录页面
+       return { name: 'Login' }
+     }
+   })
+  ```
+
++ 路由元信息（meta,限制满足一定条件才能进入页面）
+
+  ```
+  {
+  	path: 'new',
+  	component: PostsNew,
+  	// 只有经过身份验证的用户才能创建帖子
+  	meta: { requiresAuth: true }
+  },
+  ```
+
++ 过渡动画
+
++ 滚动行为
+
++ 路由懒加载(webpack里可以进一步使用chunk name便于打包的组合)
+
+  ```js
+  const UserDetails = () => import('./views/UserDetails')
+  // webpack里
+  // const UserDetails = () =>import(/* webpackChunkName: "group-user" */ './UserDetails.vue')
+  const router = createRouter({
+    // ...
+    routes: [{ path: '/users/:id', component: UserDetails }],
+  })
+  ```
+
+### vue3中的使用
+
+#### 在composition API中使用
+
+不能在setup里使用this,因此要用useRouter,还有其他的API，vue3中单独暴露出来
+
+```js
+setup() {
+    const router = useRouter()
+    const route = useRoute()
+
+    function pushWithQuery(query) {
+      router.push({
+        name: 'search',
+        query: {
+          ...route.query,
+        },
+      })
+    }
+```
+
+
+
+# vuex v4.x
+
+## pinia
+
+ https://pinia.vuejs.org/introduction.html#basic-example
+
+### Pinia 核心特性
+
+- Pinia 没有 `Mutations`
+- `Actions` 支持同步和异步
+- 没有模块的嵌套结构
+  - Pinia 通过设计提供扁平结构，就是说每个 store 都是互相独立的，谁也不属于谁，也就是扁平化了，更好的代码分割且没有命名空间。当然你也可以通过在一个模块中导入另一个模块来隐式嵌套 store，甚至可以拥有 store 的循环依赖关系
+- 更好的 TypeScript支持
+  - 不需要再创建自定义的复杂包装器来支持 TypeScript 所有内容都类型化，并且 API 的设计方式也尽可能的使用 TS 类型推断
+- 不需要注入、导入函数、调用它们，享受自动补全，让我们开发更加方便
+- 无需手动添加 store，它的模块默认情况下创建就自动注册的
+- Vue2 和 Vue3 都支持
+  - 除了初始化安装和SSR配置之外，两者使用上的API都是相同的
+- 支持 `Vue DevTools`
+  - 跟踪 actions, mutations 的时间线
+  - 在使用了模块的组件中就可以观察到模块本身
+  - 支持 time-travel 更容易调试
+  - 在 Vue2 中 Pinia 会使用 Vuex 的所有接口，所以它俩不能一起使用
+  - 但是针对 Vue3 的调试工具支持还不够完美，比如还没有 time-travel 功能
+- 模块热更新
+  - 无需重新加载页面就可以修改模块
+  - 热更新的时候会保持任何现有状态
+- 支持使用插件扩展 Pinia 功能
+- 支持服务端渲染
 
 # vue组件通信
 
@@ -438,3 +666,4 @@ export default defineComponent({
 
 
 
+参考：https://www.jianshu.com/p/f4144fe1c5ac

@@ -141,3 +141,63 @@ module.exports = function (source) {
 }
 ```
 
+# sourceMap
+
+参考资料：阮一峰http://www.ruanyifeng.com/blog/2013/01/javascript_source_map.html
+
+## 为什么需要使用sourceMap
+
+JavaScript脚本正变得越来越复杂。大部分源码（尤其是各种函数库和框架）都要经过转换，才能投入生产环境。转换的原因可能是
+
+```
+（1）压缩，减小体积。比如jQuery 1.9的源码，压缩前是252KB，压缩后是32KB。
+（2）多个文件合并，减少HTTP请求数。
+（3）其他语言编译成JavaScript。最常见的例子就是CoffeeScript。
+```
+
+这三种情况，都使得实际运行的代码不同于开发代码，除错（debug）变得困难重重。
+
+通常，JavaScript的解释器会告诉你，第几行第几列代码出错。但是，这对于转换后的代码毫无用处。
+
+Source map可以解决这个问题
+
+> 简单说，Source map就是一个信息文件，里面储存着位置信息。也就是说，转换后的代码的每一个位置，所对应的转换前的位置。有了它，出错的时候，除错工具将直接显示原始代码，而不是转换后的代码。
+
+目前，暂时只有Chrome浏览器支持这个功能。在Developer Tools的Setting设置中。
+
+![image-20220606021007054](../../img/image-20220606021007054.png)
+
+在混淆后的源文件最后有标识map文件的地址，map文件如下格式：
+
+```
+....
+/*# sourceMappingURL=app.9b048ef726300e989a01e54ad2734883.css.map */
+```
+
+```json
+{"version":3,"sources":["app.9b048ef726300e989a01e54ad2734883.css"],"names":[],"mappings":"AAeA,wCACE,eACF,CACA,oBACE,oBAAqB,CACrB,SACF,CACA,oBACE,oBAAqB,CACrB,aACF,CACA,mBACE,aACF","file":"app.9b048ef726300e989a01e54ad2734883.css","sourcesContent":["\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nh1[data-v-97c374ba], h2[data-v-97c374ba] {\n  font-weight: normal;\n}\nul[data-v-97c374ba] {\n  list-style-type: none;\n  padding: 0;\n}\nli[data-v-97c374ba] {\n  display: inline-block;\n  margin: 0 10px;\n}\na[data-v-97c374ba] {\n  color: #42b983;\n}\n"]}
+```
+
+## 如何生成sourceMap文件
+
+在webpack的output中进行配置,默认vue配置的是
+
+```
+// dev
+devtool: 'cheap-module-eval-source-map',
+//production
+productionSourceMap: true,
+devtool: '#source-map',
+```
+
++ source-map:生成单独的map文件，并指明名称与保存位置
++ eval: map关系在js的eval(...)中，不生成单独的map文件
++ eval-source-map: map关系在js的eval(...)中，map文件内嵌
++ Inline-source-map:map文件内嵌到js中
++ cheap-source-map:只有行信息，没有列信息
+
+注意：
+
++ 开源项目也需要开源sourcemap文件，非开源文件不公开sourcemap文件
++ 开发环境一般使用：eval-source-map或者cheap-source-map,线上环境一版使用source-map
+

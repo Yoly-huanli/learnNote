@@ -1,5 +1,39 @@
 [toc]
 
+# Vue3.0的新特性
+
++ performance
++ tree- shaking support
++ composition API
++ TS support
++ Fragment
++ Suspense
++ Teleport
++ custom render API
+
+# vue3起步
+
+文档
+
+```
+composition API:https://vuejs.org/guide/extras/composition-api-faq.html
+```
+
+安装
+
+```
+npm config set registry https://registry.npm.taobao.org
+npm i -g @vue/cli
+vue create vue3-demo
+```
+
+启动
+
+```
+code vue3-demo  //用vscode打开
+npm run serve
+```
+
 # vue2升vue3的动机
 
 + 更小：移除不常用api，引入tree shaking,打包体积更小
