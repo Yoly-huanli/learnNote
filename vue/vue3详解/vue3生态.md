@@ -6,7 +6,7 @@
 
 **改变视图的同时不会向后端发出请求**
 
-## hash模式
+### hash模式
 
 通过url的哈希值来进行路由，加载不同组件
 
@@ -17,7 +17,7 @@ http://localhost/#/b
 
 此时#/a，#/b是哈希值，但是url发送请求不会带这个哈希值，所以不会重新加载页面
 
-## history模式
+### history模式
 
 ```
 http://localhost/a
@@ -26,11 +26,9 @@ http://localhost/b
 
 利用 HTML5 History Interface 中新增的 `pushState()` 和 `replaceState()` 方法，此时虽然改变了当前的 URL，但浏览器不会立即向后端发送请求。
 
-## MemoryHistory(abstract history)模式
+### MemoryHistory(abstract history)模式
 
 相当于一个tab，一直在当前页面
-
-
 
 ## vue-router v4.x
 
@@ -57,7 +55,7 @@ http://localhost/b
 </div>
 ```
 
-router-link: 请注意，我们没有使用常规的 `a` 标签，而是使用一个自定义组件 `router-link` 来创建链接。这使得 Vue Router 可以在不重新加载页面的情况下更改 URL，处理 URL 的生成以及编码
+router-link: 请注意，我们没有使用常规的 `a` 标签，而是使用一个自定义组件 `router-link` 来创建链接。这使得 Vue Router 可以在不重新加载页面的情况下更改 URL，处理 URL 的生成以及编码,默认是把router-link渲染成a标签，但是也可以渲染成其他标签
 
 js
 
@@ -198,9 +196,31 @@ setup() {
     }
 ```
 
+vue2与vue3里配置的区别
+
+```
+// VUE2
+const router = new VueRouter({
+  mode: 'history',
+  base: process.env.BASE_URL,
+  routes 
+})
+//VUE3
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL), // createWebHashHistory
+  routes
+})
+```
+
+
+
 
 
 # vuex v4.x
+
+## action和mutation的区别
+
+action里可以有异步操作，mutation里必须是同步的操作
 
 ## pinia
 
@@ -229,6 +249,135 @@ setup() {
   - 热更新的时候会保持任何现有状态
 - 支持使用插件扩展 Pinia 功能
 - 支持服务端渲染
+
+# 组件库
+
+## Element Plus
+
+官网： https://element-plus.gitee.io/zh-CN/
+
+PC端
+
+element-plus 是一个使用 `TypeScript + Composition API` 重构的全新项目。官方列出了下面几项主要更新:
+
++ 使用 TypeScript 开发,比如alert组件的实现
+
+  ```js
+  import { PropType } from 'vue'
+  export default defineComponent({
+    name: 'ElAlert',
+    props: {
+      type: {
+        type: String as PropType<'success' | 'info' | 'error' | 'warning'>,
+        default: 'info',
+      }
+    }
+  })
+  ```
+
++ 使用 Vue 3.0 Composition API 降低耦合，简化逻辑
+
+  ```
+  采用一部分hooks代替原有的mixin
+  mixin缺点：
+  +  渲染上下文中公开的属性的来源不清楚。 例如，当使用多个 mixin 读取组件的模板时，可能很难确定从哪个 mixin 注入了特定的属性。
+  +  命名空间冲突。 Mixins 可能会在属性和方法名称上发生冲突
+  ```
+
++ 使用 Vue 3.0 Teleport 新特性重构挂载类组件
+
+  ```
+  采用teleport挂载的新特性
+  替代原有的直接挂载到body，采用document.body.appendChild的方法
+  ```
+
++ Vue 2.0 全局 API 切换为 Vue 3.0 实例API
+
+  ````
+  Vue2
+  ```
+  import Vue from 'vue'
+  import App from './App.vue'
+  new Vue({()=> h(App)}).$mount('#app')
+  ```
+  
+  vue3
+  ```
+  const { createApp }  from 'vue'
+  import App from "./src/App"
+  createApp(App).mount(('#app')
+  ```
+  ````
+
+  因此原有的Vue.component 方法绑定全局组件，Vue.use 绑定全局自定义指令，Vue.prototype 绑定全局变量和全局方法都要改为挂载到实例上
+
++ 国际化处理
+
+  ```
+  element-plus 中引入了 day.js 替换原来的 moment.js 来做时间的格式化和时区信息等的处理。
+  ```
+  
++ 组件库和样式打包
+
+  ```
+  除了使用 webpack 来打包组件之外，element-plus 还提供了另外一种 es-module 的打包方式，最后发布到 npm 的既有 webpack 打包的成果物，也有 rollup 打包的 es-module bundle。
+  ```
+
+element ui与element plus
+
++ 由于 Vue 3 不再支持 IE11，Element Plus 也不再支持 IE 浏览器。
++ 新组件功能
+
+## quasar
+
+官网：https://quasar.dev/introduction-to-quasar
+
+- 开箱即用，对桌面和**移动浏览器**（包括 iOS Safari！）的最佳支持
+- Quasar 的座右铭是：**编写一次代码，同时将其部署**为网站、移动应用程序和/或电子应用程序。
+
+## vuetifyjs
+
+官网：https://vuetifyjs.com/en/
+
+Vue.js 的 Material Design 组件框架
+
++ Vuetify 采用移动优先的设计方法，这意味着您的应用程序开箱即用——无论是在手机、平板电脑还是台式电脑上。
++ 整套 UI 设计为 Material 风格。能够让没有任何设计技能的开发者创造出时尚的 Material 风格界面。 （Material Design 是 Google 推出的设计语言，颜色鲜艳、动画效果突出，旨在为手机、平板电脑、台式机和“其他平台”提供更一致、更广泛的“外观和感觉”。）
++ 几乎不需要任何CSS代码，而element-ui许多布局样式需要我们来编写
+
+![image-20220609011956211](../../img/image-20220609011956211.png)
+
+## Primevue
+
+官网：https://primefaces.org/primevue/
+
++ 响应式设计:PrimeVue 组件针对不同的屏幕尺寸进行了优化。
++ PrimeVue 是一个与设计无关的库，与其他UI库不同，它不强制使用某种样式（例如：material 或者 bootstrap）。实现原理是将样式分为 core 和 theme。core 驻留在 PrimeVue 内部，以实现和组件结构相关的效果，例如定位，而 theme 实现颜色，填充和边距。
++ 同时 PrimeVue 提供各种免费开源的主题和高级主题，我们可以从各种主题中进行选择，也可以使用官方提供 Theme Designer 工具轻松开发自己的主题。
+
+## 其他
+
+https://www.jianshu.com/p/f98a14effc81
+
+# vueuse
+
+官网： https://vueuse.org/
+
+一款基于Vue组合式API的函数工具集，基于Vue Composition Api (组合式API)，只有在支持组合式API的环境下，才可以正常使用它，它是一款函数工具集。
+
+## 能做什么？
+
+- 动画
+- 浏览器
+- 组件
+- 格式化
+- 传感器
+- State(状态机)
+- 公共方法
+- 监听
+- 杂项
+
+
 
 # vue组件通信
 
@@ -666,4 +815,10 @@ export default defineComponent({
 
 
 
-参考：https://www.jianshu.com/p/f4144fe1c5ac
+参考：
+
+https://www.jianshu.com/p/f4144fe1c5ac
+
+Element-ui和Element-Plus的区别_Element2和Element3的区别http://www.qianduanheidong.com/blog/article/318191/5d63ce82942aaa19f35b/
+
+Vue 3 组件库：element-plus 源码分析https://juejin.cn/post/6914598983205847053

@@ -41,7 +41,7 @@
 <link rel="preload" href="main.js">
 ```
 
-## 3..为什么普通 for 循环的性能远远高于 forEach 的性能
+## 3.为什么普通 for 循环的性能远远高于 forEach 的性能
 
 + for 循环没有任何额外的函数调用栈和上下文；
 + forEach函数签名实际上是
@@ -53,3 +53,47 @@ array.forEach(function(currentValue, index, arr), thisValue)
 
 
 它不是普通的 for 循环的语法糖，还有诸多参数和上下文需要在执行的时候考虑进来，这里可能拖慢性能；新版本v8优化之后已经相差不大。
+
+## 4.ajax、fetch和axios
+
++ ajax(asynchronous js and XML)一种技术统称
+
+```js
+function getXHR(){
+  var xhr = null;
+  if(window.XMLHttpRequest) {// 兼容 IE7+, Firefox, Chrome, Opera, Safari
+    xhr = new XMLHttpRequest();
+  } else if (window.ActiveXObject) {
+    xhr = new ActiveXObject();
+  }else{
+      alert('您的浏览器不支持ajax请求')
+  }
+  return xhr;
+}
+
+var xhr = getXHR();
+xhr.open('GET', 'https:baidu.com',true);  //设置请求方式，url，以及是否异步
+xhr.onreadystatechange=function(){   //设置回调监听函数
+   if(xhr.readyState==4){
+        if(xhr.status==200){
+            var data=xhr.responseText;
+            console.log(data);
+   }
+  }
+}
+
+xhr.onerror = function() {
+  console.log("Oh, error");
+};
+xhr.send();  //发送请求
+```
+
++ Fetch:浏览器原生的api,和XMLHttpRequest是一个级别的，支持promise
+
+```
+function ajax2(url){
+  return fetch(url).then(res=>res.json())
+}
+```
+
++ axios:第三方库,内部是使用XMLHttpRequest和fetch实现的
