@@ -1,5 +1,489 @@
 [toc]
 
+### 什么是跨域
+
+浏览器有同源策略，不允许ajax访问其他接口，主要防止CSRF攻击，因为如果一个网站登录状态，其他网站没有同源限制，可以通过ajax获取到数据，不安全。
+
+而且其出现主要是由于前后端分离，早期前后端代码部署在同一个服务器，后来逐渐分开了web服务器，数据服务器，资源服务器等等等。。
+
+- 跨域条件：协议，域名，端口有一个不同就是跨域，即便两个不同的域名指向同一个ip地址，也非同源。
+- 有三个标签允许跨域加载资源
+
+```
+<img src =xxx> // 用于打点统计
+<link href = xxx>
+<script src=xxx>
+// link script可以引用CDN的对象，比如boot.cdn.xxx
+// script 可以用于JSONP
+```
+
+- 跨域限制
+
+```
+Cookie、LocalStorage、IndexedDB 等存储性内容
+DOM 节点
+AJAX 请求发送后，结果被浏览器拦截了
+```
+
+### 跨域方式
+
+#### 1.JSONP
+
+JSONP原理
+
+- 加载http...../ch.html
+- 服务器不一定真正有一个ch.html,因为服务器可以根据请求，动态生成一个文件返回，同理，js文件可能不存在
+- 返回内容格式callback(...),是一个函数，注意使用名称要一致
+
+##### 简单应用
+
+```
+//客户端获取其他源的内容
+<script type="text/javascript">
+    function jsonp(data){
+       console.log('data',data)//data {num1: "js", num2: "json"}
+}
+</script>
+
+<script type="text/javascript" src="a.json?callback=jsonp"></script>  
+// a.json中
+jsonp({"num1":"js","num2":"json"})
+//发送内容给服务端，服务端再设置，读取num这个值
+<script type="text/javascript">
+    function jsonp(data){
+       console.log('发送成功')
+}
+</script>
+<script type="text/javascript" src="http://api.com?num=1&callback=jsonp"></script>  
+```
+
+##### 用promise封装
+
+动态创建script，callback=func,后端 拼接为func(data)
+
+```
+// index.html
+function jsonp({ url, params, callback }) {
+  return new Promise((resolve, reject) => {
+    let script = document.createElement('script')
+    window[callback] = function(data) {
+      resolve(data)
+      document.body.removeChild(script)
+    }
+    params = { ...params, callback } // wd=b&callback=show
+    let arrs = []
+    for (let key in params) {
+      arrs.push(`${key}=${params[key]}`)
+    }
+    script.src = `${url}?${arrs.join('&')}`
+    document.body.appendChild(script)
+  })
+}
+jsonp({
+  url: 'http://localhost:3000/say',
+  params: { wd: 'Iloveyou' },
+  callback: 'show'
+}).then(data => {
+  console.log(data)
+})
+```
+
+上面这段代码相当于向http://localhost:3000/say?wd=Iloveyou&callback=show这个地址请求数据，然后后台返回show('我不爱你')，最后会运行show()这个函数，打印出'我不爱你'
+
+```
+// server.js
+let express = require('express')
+let app = express()
+app.get('/say', function(req, res) {
+  let { wd, callback } = req.query
+  console.log(wd) // Iloveyou
+  console.log(callback) // show
+  res.end(`${callback}('我不爱你')`)
+})
+app.listen(3000)
+```
+
+##### 缺点
+
+- jsonp:支持浏览器与服务器双向通信，兼容性好，但是只支持get，有get的缺点
+
+#### 2.服务端设置http header
+
+```
+response.setHeader("Access-Control-Allow-Origin","http....ch.com,...")//允许跨域的域名
+response.setHeader("Access-Control-Allow-Headers","X-Requested-With")
+response.setHeader("Access-Control-Allow-Method","PUT,POST")
+
+response.setHeader("Access-Control-Allow-Credentials","true")//接收跨域的cookie
+```
+
+#### 3.postmessage
+
+- postmessage要通过window使用
+- 传值用window.postmessage,获取值用addEventListener('message',function(){})
+- window.opener.postMessage
+- iframe.contentWindow.postMessage
+
+```
+ http://localhost:3000/a.html页面向http://localhost:4000/b.html传递“我爱你”,然后后者传回"我不爱你"。
+ 
+// a.html，a中嵌入b，a通过iframe发送信息
+<iframe src="http://localhost:4000/b.html" frameborder="0" id="frame" onload="load()"></iframe> //等它加载完触发一个事件
+//内嵌在http://localhost:3000/a.html
+<script>
+  function load() {
+    let frame = document.getElementById('frame')
+    frame.contentWindow.postMessage('我爱你', 'http://localhost:4000') //发送数据
+    window.onmessage = function(e) { //接受返回数据
+      console.log(e.data) //我不爱你
+    }
+  }
+</script>
+
+// b.html
+  window.onmessage = function(e) {
+    console.log(e.data) //我爱你
+    e.source.postMessage('我不爱你', e.origin)
+ }
+```
+
+新开窗口的例子
+
+```
+//A页面通过 window.open获得 B页面的句柄，向 B页面发送信号，并监听 B页面回传回来的信号
+<!-- A页面 -->
+<div id="msg"></div>
+<script>
+  window.onload = () => {
+    var opener = window.open('http://127.0.0.1:9001/b.html')
+    // setTimeout 是为了等到真正获取到 opener的句柄再发送数据
+    setTimeout(() => {
+      // 只对 域名为 http://127.0.0.1:9001的页面发送数据信号
+      opener.postMessage('red', 'http://127.0.0.1:9001');
+    }, 0)
+    
+    window.addEventListener('message', event => {
+      if(event.origin === 'http://127.0.0.1:9001'){
+        document.getElementById('msg').innerHTML = event.data
+      }
+    })
+  }
+</script>
+```
+
+B页面接收 A页面的信号，并通过事件句柄反向对 A页面发送数据信号
+
+```
+<div id="box">color from a.html</div>
+<script type="text/javascript">
+  window.addEventListener('message', event => {
+    // 通过origin属性判断消息来源地址
+    // 只有当数据信号来源于 http://127.0.0.1:9001的服务器才接收
+    if(event.origin === 'http://127.0.0.1:9001'){
+      // 获取信息员的数据信号
+      document.getElementById('box').style.color = event.data
+      // 通过 event.source向信号源反向发送数据
+      event.source.postMessage('got your color!', event.origin)
+    }
+  })
+</script>
+```
+
+postmessage的方法需要验证源
+
+```
+//iframe的例子
+//父向子页面传值
+//父页面
+var o=document.getElementsByTagName('iframe')[0];
+o.contentWindow.postMessage('Hello World',"*");
+//子页面
+window.addEventListener('onmessage',function(e){ 
+  if(e.domain=='1.com'){
+    if(e.data=='Hello World'){
+         e.source.postMessage('Hello',"*");
+         //反过来向父页面传消息
+    }else{
+      alert(e.data);
+}
+}
+})
+```
+
+![image-20220628104316064](../img/image-20220628104316064.png)
+
+页面与 iframe 通信非常简单，首先需要在页面中监听 iframe 发来的消息，做相应的业务处理：
+
+```
+/* 业务页面代码 */
+window.addEventListener('message', function (e) {
+    // …… do something
+});
+```
+
+当页面要与其他的同源或非同源页面通信时，会先给 iframe 发送消息：
+
+```
+/* 业务页面代码 */
+window.frames[0].window.postMessage(mydata, '*');
+```
+
+iframe 收到消息后，会使用某种跨页面消息通信技术在所有 iframe 间同步消息，例如下面使用的 Broadcast Channel：
+
+```
+/* iframe 内代码 */
+const bc = new BroadcastChannel('AlienZHOU');
+// 收到来自页面的消息后，在 iframe 间进行广播
+window.addEventListener('message', function (e) {
+    bc.postMessage(e.data);
+});    
+```
+
+其他 iframe 收到通知后，则会将该消息同步给所属的页面：
+
+```
+/* iframe 内代码 */
+// 对于收到的（iframe）广播消息，通知给所属的业务页面
+bc.onmessage = function (e) {
+    window.parent.postMessage(e.data, '*');
+};
+```
+
+#### 4.websocket
+
+```
+var ws=new WebSocket('wss/....org')
+ws.onopen=function(e){
+    ws.send('...')
+}
+ws.onmessage=function(e){
+    console.log(e.data)
+    ws.close()
+}
+ws.onclose=function(){}
+```
+
+#### 5.document.domain主域相同而子域不同
+
+- 在http://www.a.com/a.html和http://script.a.com/b.html两个文件中分别加上document.domain = ‘[a.com](http://a.com/)’；然后通过a.html文件中创建一个iframe，去控制iframe的contentDocument
+
+```
+//a.html
+document.domain = 'a.com';
+var ifr = document.createElement('iframe');
+ifr.src = 'http://script.a.com/b.html';
+ifr.style.display = 'none';
+document.body.appendChild(ifr);
+ifr.onload = function(){
+    var doc = ifr.contentDocument || ifr.contentWindow.document;
+    // 在这里操纵b.html
+    alert(doc.getElementsByTagName("h1")[0].childNodes[0].nodeValue);
+};
+
+//b.html
+document.domain = 'a.com';
+```
+
+#### 6. Node中间件代理(两次跨域)
+
+同源策略是浏览器需要遵循的标准，而如果是服务器向服务器请求就无需遵循同源策略。
+
+
+
+# iframe通信
+
++ 通过postMessage进行通信
++ 发送消息是通过要发送的元素postMessage, window.iframe1.contentWindow.postMessage, window.parent.postMessage('world', '*')
++ 接收消息是通过监听message事件
++ postMessage有跨域限制
+
+![image-20220614104951504](../img/image-20220614104951504.png)
+
+代码如下
+
+```html
+//a页面
+<body>
+  <p>
+    这里是父级页面a
+    <button id = "btn1">发送信息给b</button>
+  </p>
+  <iframe id="iframe1" src="./b.html"></iframe>
+</body>
+<script>
+  const btn = document.getElementById('btn1');
+  btn1.addEventListener('click',()=>{
+    console.log('父级页面a发送信息')
+    window.iframe1.contentWindow.postMessage('hello','*')
+    //第一个参数是内容，第二个参数可以限制发给哪些域，不是所有url都可以接收到这个消息
+  })
+  window.addEventListener('message', (e) => {
+    console.log('父级页面a接收信息')
+    console.log('origin', e.origin, e.data)
+    //e.origin可以判断发送过来消息的源，判断是否合法
+  })
+</script>
+```
+
+```html
+//b页面
+<body>
+  <p>
+    这里是内嵌页面b
+    <button id="btn1">发送信息给a</button>
+  </p>
+</body>
+<script>
+  const btn = document.getElementById('btn1');
+    btn1.addEventListener('click', () => {
+      console.log('内嵌页面b发送信息')
+      window.parent.postMessage('world', '*')
+    })
+    window.addEventListener('message', (e) => {
+      console.log('内嵌页面b接收信息')
+      console.log('origin', e.origin, e.data)
+    })
+</script>
+```
+
+# 同源页面通信
+
+满足同源策略，同一原始域和用户代理下的所有窗口、iFrames等进行交互，属于同源通信。(比如两个同源的tab页面进行通信)
+
+### 1.BroadcastChannel
+
+使用的场景，如，用户同时依次打开某个网站的几个页面，然后在其中一个页面 A进行登录操作，那么其他的页面就可以通过 BroadcastChannel收到来自页面 A的登录状态，从而能够完成多个页面自动同步登录状态的目的。
+
+```js
+//发送页面
+const cast = new BroadcastChannel('mychannel')
+// data 可以是任何 JS数据类型
+const data = 'I\'m from Page A'
+// 广播信号
+cast.postMessage(data)
+```
+
+```js
+//接收页面
+// B页面监听同源下所有页面发送出的“广播”
+//  BroadcastChannel的参数，即channel号必须与想要监听的广播源相同，这里是 mychannel
+const cast = new BroadcastChannel('mychannel')
+// 接收信号
+cast.onmessage = function (e) {
+  console.log(e.data) // => I'm from Page A
+}
+// 关闭连接
+cast.close()
+```
+
+### 2.postMessage(支持跨域)
+
+### 3.Localstorage
+
+Chrome、Edge等浏览器下的这个 storage事件必须由其他同源页面触发
+
+```js
+// A页面
+window.onstorage = function(e) {
+  console.log(e.newValue); // previous value at e.oldValue
+};
+// B页面
+localStorage.setItem('key', 'value');
+```
+
+注意：设置相同的localstorage只会在发生改变时触发
+
+```js
+localStorage.setItem('lily', '7');
+localStorage.setItem('lily', '7');
+```
+
+接收到的e
+
+```js
+//主要通过e.newValue获取
+isTrusted: true, key: "lily", oldValue: "7", newValue: "8", url: "https://www.nowcoder.com/interview/ai/cover?jobTagId=644".....
+```
+
+### 4.SharedWorker
+
+Web worker分为两种：专用线程 dedicated web worker、共享线程 shared web worker 专用线程随当前页面的关闭而结束；这意味着 专用线程只能被创建它的页面访问；与之相对应的 共享线程可以被多个页面访问（包括多个标签页和 iframe），不过这些页面**必须是同源的**，即 共享线程支持的是 同源通信
+
+```js
+// worker.js
+// 共享的数据
+let shareData = 0
+// 监听主线程的连接
+onconnect = function(e) {
+  const port = e.ports[0]
+  port.onmessage = function(e) {
+    if (e.data === 'get') {
+      // 向连接的主线程发送信号
+      port.postMessage(shareData)
+    } else {
+      // 将主线程发来的数据设置为 worder内的 共享数据
+      shareData = e.data
+    }
+  }
+}
+```
+
+A页面设置 SharedWorker中的数据字段
+
+```js
+<input type="text" id="textInput" />
+<input type="button" value="设置共享数据" />
+
+<script>
+  const worker = new SharedWorker('worker.js')
+  const inputEle = document.querySelector('#textInput')
+
+  inputEle.onchange = () => {
+    console.log('Message posted to worker')
+    // 向 worker 发送数据信号
+    worker.port.postMessage(inputEle.value)
+  }
+</script>
+```
+
+B页面获取 SharedWorker中的数据字段
+
+```js
+<div id="result"></div>
+<button id="btn">获取 SharedWorker中的共享数据</button>
+<script>
+  const worker = new SharedWorker('worker.js')
+  var result = document.querySelector('#result')
+  // 发送获取获取 SharedWorder 中共享数据的请求
+  document.getElementById('btn').addEventListener('click' , () => {
+    // 向 worker发送信号
+    worker.port.postMessage('get')
+  })
+  // 接收从 SharedWorder发送来的共享的数据
+  worker.port.onmessage = e => {
+    console.log('Message received from worker')
+    // 在页面上显示获取到的 worker共享数据
+    result.textContent = e.data
+  }
+</script>
+```
+
+最终，在 A页面中设置的值，或被 B页面获取到， **像是存储**，一个页面在公共区域存了一个数据，另外一个页面想要了，需要主动发送get去获取，可能并不是适合于页面通信，当然了，SharedWorker本来就不是用于页面通信的，所以没有预期的效果也是情有可原的.
+
+### 5.websocket
+
+要用到websocket的服务器，后端广播
+
+### 6.IndexDB(支持跨页面)
+
+IndexedDB 是一种低级 API，用于客户端**存储大量结构化数据**(包括 文件、blobs)，该API使用索引来实现对该数据的高性能搜索，区别于 LocalStorage只能存储字符串，IndexedDB可以存储 **JS所有的数据类型**，包括 null、undefined等，是 HTML5规范里新出现的 API IndexedDB 是一种使用浏览器存储大量数据的方法.它创造的数据可以被查询，并且**可以离线使用**。IndexedDB对于那些需要存储大量数据，或者是需要离线使用的程序是非常有效的解决方法
+
+```
+与 Shared Worker 方案类似，消息发送方将消息存至 IndexedDB 中；接收方（例如所有页面）则通过轮询去获取最新的信息。
+```
+
+
+
 # 浏览器缓存
 
 ## 原因
@@ -449,3 +933,742 @@ A与B在同一域名，a.c.com与b.c.com可以用cookie设置document.domain解�
 
 
 
+OAuth（Open Authorization）是一个关于授权（authorization）的开放网络标准，允许用户授权第三 方应用访问他们存储在另外的服务提供者上的信息，而不需要将用户名和密码提供给第三方移动应用或分享他们数据的所有内容。
+
+应用场景
+
++ 原生app授权：app登录请求后台接口，为了安全认证，所有请求都带token信息，如果登录验证、请求后台数据。
++ 前后端分离单页面应用：前后端分离框架，前端请求后台数据，需要进行oauth2安全认证，比如使用vue、react后者h5开发的app
++ 第三方应用授权登录，比如QQ，微博，微信的授权登录。
+
+# 浏览器
+
+## BOM(浏览器对象模型)
+
+### 1.navigator
+
+```
+var us = navigator.userAgent //判断浏览器类型
+var isChrome = us.indexOf('Chrome')
+console.log(isChrome)
+```
+
+uerAgent是一个很长的字符串
+
+```
+"Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603
+```
+
+### location对象
+
+既是window的对象，也是argument的对象, window.location与document.location是等价的
+
+#### location的属性
+
+完整url:[http://www.wrox.com:80/files?q=java](http://www.wrox.com/files?q=java)
+
+| 属性              | 例子                                    |
+| ----------------- | --------------------------------------- |
+| location.hash     | #test                                   |
+| location.host     | [www.wrox.com:80](http://www.wrox.com/) |
+| location.hostname | [www.wrox.com](http://www.wrox.com/)    |
+| location.port     | 80                                      |
+| location.protocol | http                                    |
+
+不太熟悉的
+
+| 属性              | 例子                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| location.search   | ?q=java                                                      |
+| location.pathname | /files                                                       |
+| location.href     | /[http://www.wrox.com:80/files?q=java](http://www.wrox.com/files?q=java) |
+
+其它
+
+```
+1.window.location.toString():作用与window.location.href相同，获取完整url
+2.window.location.origin:http://localhost:3000,协议，域名，端口号
+```
+
+#### 查询字符串参数
+
+//http://localhost:3000/boss?q=k&m=9
+
+- 问号之后的内容
+- 1.window.location.search (?q=k&m=9问号以及之后的内容)
+- 2.window.location.search.substring(1) (q=k&m=9)=====>字符串不能用split
+
+### history对象
+
+```
+history.go(-2) 后退两页
+history.back()
+history.forward()
+```
+
+### window对象
+
+是浏览器的一个实例，既是访问浏览器窗口的接口，又是Global对象
+
+#### 系统对话框
+
+是同步的，显示这些对话框，代码停止执行，关闭之后代码继续执行
+
+```
+//alert
+alert('hello')
+//confirm 选择，按了确认和取消键进行不同的操作
+if(confirm('你确定吗')){
+    alert('你点击了确认')
+}else{
+    alert('你点击了取消')
+}
+//prompt 提示信息与用户文本输入
+var result=prompt('你的名字是什么')
+if(result!==null){
+    console.log('你好',result)
+}
+```
+
+------
+
+## V8引擎
+
+JS是解释型语言，所以它无需提前编译，而是由解释器实时运行
+
+### a.b.c.d 和 a['b']['c']['d']，哪个性能更高？
+
+a.b.c.d 比 a['b']['c']['d'] 性能高点，后者还要考虑 [ ] 中是变量的情况，再者，从两种形式的结构来看，显然编译器解析前者要比后者容易些，自然也就快一点。
+
+### 引擎对JS的处理
+
+```
+核心的 即时编译器将源码编译成机器码运行
+```
+
+- 读取代码，进行词法分析，然后将代码分解成词元（token）
+
+![image-20220628103340863](../img/image-20220628103340863.png)
+
++ 对词元进行语法分析，然后将代码整理成抽象语法树(AST)
+
+![image-20220628103505209](../img/image-20220628103505209.png)
+
++ 使用翻译器（translator），将代码转为字节码（bytecode）
+
+- 使用字节码解释器（bytecode interpreter），将字节码转为机器码
+
+最终计算机执行的就是机器码。为了提高运行速度，，不同浏览器策略可能还不同，有的浏览器就省略了字节码的翻译步骤，直接转为机器码（如chrome的v8）
+
+### JS的预处理阶段
+
+在正式执行JS前，还会有一个预处理阶段
+
+- 分号补全,如果不写分号在代码压缩为一行的时候可能会导致出错
+
+```
+function buquan(){
+    return
+    {
+        'a':'a'
+    }
+}
+//分号补全
+function buquan(){
+    return;
+    {
+        'a':'a'
+    };
+}
+//结果为undefined
+```
+
+- 变量提升，在代码执行前先进行解析
+
+```js
+var a=9;
+console.log(a)
+var class='12'
+```
+
+```js
+function fn()}{
+//var web 变量提升，在这里声明了，if语句还是起了作用
+   if(false){
+    var web='hh' 
+}
+console.log(web)//undefined
+}
+//函数，会报错
+function(a=b,b=3) {} //报错
+```
+
+##### 3.JS的执行阶段
+
+- 1.执行上下文
+
+```
+JS有执行上下文
+1.浏览器首次载入脚本，它将创建全局执行上下文，并压入执行栈栈顶（不可被弹出）
+2.然后每进入其它作用域就创建对应的执行上下文并把它压入执行栈的顶部
+3.一旦对应的上下文执行完毕，就从栈顶弹出，并将上下文控制权交给当前的栈。
+这样依次执行（最终都会回到全局执行上下文）
+```
+
+每一个执行上下文，都有三个重要属性:
+
+```
++ 变量对象(Variable object ， VO)
++ 作用域链(Scopechain)
++ this
+```
+
+- 2.VO（变量对象）和AO（活动对象）
+
+```
+VO中会存放一些变量信息（如声明的变量，函数， arguments参数等等
+AO（ activationobject)，当函数被调用者激活，AO就被创建了。
+```
+
+- 3.作用域链
+- 4.this this是执行上下文环境的一个属性，而不是某个变量对象的属性
+
+### Service Worker
+
+#### 1.是什么
+
+Service Worker 是运行在浏览器背后的独立线程，脱离浏览器窗体的JS线程
+
+- window以及DOM都是不能访问的，此时我们可以使用self访问全局上下文。
+- 设计为完全异步，同步API（如XHR和localStorage）不能在Service Worker中使用
+- 必须是https协议或者localhost
+
+#### 作为消息中转站页面间通信
+
+- 注册serviceWorker
+
+```
+navigator.serviceWorker.register('../util.sw.js').then(function () {
+    console.log('Service Worker 注册成功');
+});
+/* ../util.sw.js Service Worker 逻辑 */
+self.addEventListener('message', function (e) {
+    console.log('service worker receive message', e.data);
+    e.waitUntil(
+        self.clients.matchAll().then(function (clients) {
+            if (!clients || clients.length === 0) {
+                return;
+            }
+            clients.forEach(function (client) {
+                client.postMessage(e.data);
+            });
+        })
+    );
+});
+```
+
+在 Service Worker 中监听了message事件，获取页面（从 Service Worker 的角度叫 client）发送的信息。然后通过self.clients.matchAll()获取当前注册了该 Service Worker 的所有页面，通过调用每个client（即页面）的postMessage方法，向页面发送消息。这样就把从一处（某个Tab页面）收到的消息通知给了其他页面。
+
+- 页面监听 Service Worker 发送来的消息：
+
+```
+/* 页面逻辑 */
+navigator.serviceWorker.addEventListener('message', function (e) {
+    const data = e.data;
+    const text = '[receive] ' + data.msg + ' —— tab ' + data.from;
+    console.log('[Service Worker] receive message:', text);
+});
+navigator.serviceWorker.controller.postMessage(mydata);
+```
+
+## 跨域
+
+### 跨域请求(CORS跨域资源共享)
+
+#### 简单请求
+
+- 使用下列方法之一：
+
+```
+GET HEAD POST
+```
+
+- Content-Type 的值仅限于下列三者之一：
+
+```
+text/plain
+multipart/form-data
+application/x-www-form-urlencoded 
+```
+
+- HTTP头
+
+```
+只能是 Accept/ Accept-Language/
+Conent-Language/ Content-Type 等 
+```
+
+简单请求就是普通 **HTML Form 在不依赖脚本的情况下**可以发出的请求，比如表单的 method 如果指定为 POST ，可以用 enctype 属性指定用什么方式对表单内容进行编码，合法的值就是前述这三种。
+
+#### 复杂请求
+
+普通 HTML Form 无法实现的请求。比如 PUT 方法、需要其他的内容编码方式、自定义头之类的。 对于复杂请求来说，首先会发起一个预检请求，该请求是 option 方法的，通过该请求来知道服务端是否允许跨域请求。
+
+##### 复杂请求能否加速
+
+优化OPTIONS预检请求的发送，CORS中**Access-Control-Max-age**可以设置缓存的时间，表示多少秒内不会对同一个非简单请求去发送预检请求，这样的话就能够减少重复多次发送options请求的往返时间
+
+#### Ajax原生实现 true（异步）或 false（同步）
+
+```
+//考虑兼容问题： 
+if(window.XMLHttpRequest){ 
+  var xhr = new XMLHTTPRequest(); 
+}else{ 
+  var xhr = new ActiveXObject(); 
+} 
+xhr.open("get/post", "请求地址", true);
+xhr.send(null); //为空一定要发送null 
+xhr.onreadystatechange = function(){   
+  if(xhr.readyState == 4){
+    document.getElementById().innerHTML = xhr.responseText; } }
+//xhr的readyState有5个数值 
+0: 未初始化，此时XMLHTTPRequest对象已经创建，还没有调用open(); 
+1: 已经创建请求，调用open函数，但是还没有调用send发送；
+2: 请求已经发送，正在处理中，此时已经接受了response的报文头部；
+3: 请求处理中，此时已经接收了部分报文体，response中的部分数据已经可以使用； 
+4: 响应完成，可以使用报文的全部信息 ``` 注意：为了防止缓存(304)，调用open时，在第二个参数请求地址后添加一个随机数，保证每次访问的地址不同，避免因为缓存导致请求的文件发生改变，而页面并未随之改变(因为使用了缓存的数据)。 
+//设置请求头部发送时的文本格式，因为post方法只能通过表单格式发送 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+ //send方法中的参数是报文体，而post方法传递是通过报文体，调用send方法传递的参数是以kv对形式的字符串，类似query string xhr.send("k=v&k=v"); 
+```
+
+获取响应
+
+```
+responseText 获得字符串形式的响应数据。
+responseXML 获得XML 形式的响应数据。 
+```
+
+同步
+
+```
+xhr.open("GET","info.txt",false);
+xhr.send();
+document.getElementById("myDiv").innerHTML=xhr.responseText; //获取数据直接显示在页面上 
+```
+
+异步
+
+```
+xhr.onreadystatechange=function() { 
+  if (xhr.readyState==4 &&xhr.status==200){     document.getElementById("myDiv").innerHTML=xhr.responseText; } } 
+```
+
+#### jquery ajax
+
+```
+$.ajax({ 
+  type: 'POST', 
+  url: url,
+  data: data, 
+  dataType: dataType, 
+  success: function() {}, 
+  error: function() {} }) 
+```
+
+#### fetch
+
+- 基于Promise设计
+- 当接收到一个代表错误的 HTTP 状态码时，从 fetch()返回的 Promise 不会被标记为 reject， 即使该 HTTP 响应的状态码是 404 或 500。相反，它会将 Promise 状态标记为 resolve （但是会将 resolve 的返回值的 ok 属性设置为 false ）， 仅当网络故障时或请求被阻止时，才会标记为 reject。
+- 默认情况下, fetch 不会从服务端发送或接收任何 cookies, 如果站点依赖于用户 session，则会导致未经认证的请求（要发送 cookies，必须设置 credentials 选项）.
+
+```
+fetch(url) .then(response => { 
+  if (response.ok) { return response.json(); } }) .then(data => console.log(data)) .catch(err => console.log(err)) 
+```
+
+#### 4.axios 它是promise对XHR的一个封装。
+
+------
+
+### Web Worker
+
+#### 1.简介
+
+Web Worker (工作线程) 是 HTML5 中提出的概念，分为两种类型，专用线程（Dedicated Web Worker） 和共享线程（Shared Web Worker）。专用线程仅能被创建它的脚本所使用，而共享线程能够在不同的脚本中使用。
+
+- 可以在页面主运行的 JavaScript 线程中加载运行另外单独的一个或者多个 JavaScript 线程；JavaScript 的 ==“多线程” ==技术
+- Web Worker 的意义在于可以将一些耗时的数据处理操作从主线程中剥离，使主线程更加专注于页面渲染和交互。
+
+```
+懒加载
+文本分析
+流媒体数据处理
+canvas 图形绘制
+图像处理
+```
+
+注意事项
+
+```
+1.有同源限制
+2.无法访问 DOM 节点
+3.运行在另一个上下文中，无法使用Window对象
+4.Web Worker 的运行不会影响主线程，但与主线程交互时仍受到主线程单线程的瓶颈制约。换言之，如果 Worker 线程频繁与主线程进行交互，主线程由于需要处理交互，仍有可能使页面发生阻塞
+```
+
+#### 判断浏览器是否支持
+
+```
+if (window.Worker) {
+    // 是否支持专用线程
+}
+...
+if (window.SharedWorker) {
+    // 是否支持共享线程
+}
+```
+
+#### 线程
+
+**线程创建**
+
+有同源限制
+
+```
+var worker = new Worker('worker.js')
+var sharedWorker = new SharedWorker('shared-worker.js')
+var myWorker = new Worker("my_task.js");
+
+// my_task.js中的代码 
+var i = 0;
+function timedCount(){
+    i = i+1;
+    postMessage(i);
+    setTimeout(timedCount, 1000);
+}
+timedCount();
+// 在当前页面创建一个Webserver
+var myTask = `
+    var i = 0;
+    function timedCount(){
+        i = i+1;
+        postMessage(i);
+        setTimeout(timedCount, 1000);
+    }
+    timedCount();
+`;
+
+var blob = new Blob([myTask]);
+var myWorker = new Worker(window.URL.createObjectURL(blob));
+```
+
+**数据传递**
+
+- 通过 postMessage() 方法发送消息，通过 onmessage 事件接收消息。
+- Worker 与其主页面之间只能单纯的传递数据，不能传递复杂的引用类型：如通过构造函数创建的对象等。并且，传递的数据也是经过拷贝生成的一个副本，在一端对数据进行修改不会影响另一端。
+
+**专用线程数据传递**
+
+```
+// 主线程
+var worker = new Worker('worker.js')
+worker.postMessage([10, 24])
+worker.onmessage = function(e) {
+    console.log(e.data)
+}
+
+// Worker 线程
+onmessage = function (e) {
+    if (e.data.length > 1) {
+        postMessage(e.data[1] - e.data[0])
+    }
+}
+```
+
+在 Worker 线程中，self 和 this 都代表子线程的全局对象
+
+```
+//监听onmessage事件写法
+// 写法 1
+self.addEventListener('message', function (e) {
+})
+// 写法 2
+this.addEventListener('message', function (e) {
+})
+addEventListener('message', function (e) {
+})
+// 写法 4
+onmessage = function (e) {
+}
+```
+
+另一种传递方式：转而不是拷贝
+
+```
+var uInt8Array = new Uint8Array(1024*1024*32); // 32MB
+for (var i = 0; i < uInt8Array .length; ++i) {
+  uInt8Array[i] = i;
+}
+
+console.log(uInt8Array.length); // 传递前长度:33554432
+
+var myTask = `
+    onmessage = function (e) {
+        var data = e.data;
+        console.log('worker:', data);
+    };
+`;
+
+var blob = new Blob([myTask]);
+var myWorker = new Worker(window.URL.createObjectURL(blob));
+myWorker.postMessage(uInt8Array.buffer, [uInt8Array.buffer]);
+
+console.log(uInt8Array.length); // 传递后长度:0
+```
+
+**共享线程数据传递**
+
+端口号
+
+```
+// 主线程
+var sharedWorker = new SharedWorker('shared-worker.js')
+sharedWorker.port.postMessage([10, 24])
+sharedWorker.port.onmessage = function (e) {
+    console.log(e.data)
+}
+
+// Worker 线程
+onconnect = function (e) {
+    let port = e.ports[0]
+    port.onmessage = function (e) {
+        if (e.data.length > 1) {
+            port.postMessage(e.data[1] - e.data[0])
+        }
+    }
+}
+```
+
+**关闭 Worker**
+
+```
+// 主线程
+worker.terminate()
+// Dedicated Worker 线程中
+self.close()
+// Shared Worker 线程中
+self.port.close()
+```
+
+**错误处理**
+
+onerror 和 onmessageerror
+
+```
+// 主线程
+worker.onerror = function () {}
+// 主线程使用专用线程
+worker.onmessageerror = function () {}
+// 主线程使用共享线程
+worker.port.onmessageerror = function () {}
+// worker 线程
+onerror = function () {}
+```
+
+**加载外部脚本**
+
+```
+importScripts('script1.js', 'script2.js')
+```
+
+**嵌入式 Worker**
+
+目前没有一类标签可以使 Worker 的代码像 `<script>`元素一样嵌入网页中，但我们可以通过 ==Blob() ==将页面中的 Worker 代码进行解析。
+
+```
+<script id="worker" type="javascript/worker">
+// 这段代码不会被 JS 引擎直接解析，因为类型是 'javascript/worker'
+
+// 在这里写 Worker 线程的逻辑
+</script>
+<script>
+    var workerScript = document.querySelector('#worker').textContent
+    var blob = new Blob(workerScript, {type: "text/javascript"})
+    var worker = new Worker(window.URL.createObjectURL(blob))
+</script>
+//在当前页面新建了myWorker线程
+var myTask = `
+    onmessage = function (e) {
+        var data = e.data;
+        data.push('hello');
+        console.log('worker:', data); // worker: [1, 2, 3, "hello"]
+        postMessage(data);
+    };
+`;
+
+var blob = new Blob([myTask]);
+var myWorker = new Worker(window.URL.createObjectURL(blob));
+
+myWorker.onmessage = function (e) {
+    var data = e.data;
+    console.log('page:', data); // page: [1, 2, 3, "hello"]
+    console.log('arr:', arr); // arr: [1, 2, 3]
+};
+
+var arr = [1,2,3];
+myWorker.postMessage(arr);
+```
+
+#### 9.Worker 中可以使用的函数和类
+
+时间相关
+
+```
+clearInterval()
+clearTimeout()
+setInterval()
+setTimeout
+```
+
+Worker 相关
+
+```
+importScripts()
+close()
+postMessage()
+```
+
+存储相关
+
+```
+Cache
+IndexedDB
+```
+
+网络相关
+
+```
+Fetch
+WebSocket
+XMLHttpRequest
+```
+
+#### 典型应用场景
+
+典型应用场景
+
+- 1、数学运算：用来做后台计算，对CPU密集型的场景再适合不过了。
+- 2、图像处理 通过使用从<canvas>中获取的数据，可以把图像分割成几个不同的区域并且把它们推送给并行的不同Workers来做计算，对图像进行像素级的处理，再把处理完成的图像数据返回给主页面。
+- 3、大数据的处理 目前mvvm框架越来越普及，基于数据驱动的开发模式也越愈发流行，未来大数据的处理也可能转向到前台，这时，将大数据的处理交给Web Worker吧。
+
+**WebServer实际操作**
+
+- 跨域，需要启动本地服务器，主页面为main.html,server为worker.js
+
+```
+var http = require('http');
+var fs = require('fs');//引入文件读取模块
+
+
+var server= http.createServer(function(req,res){
+
+    var url = req.url; 
+    //客户端输入的url，例如如果输入localhost:8888/index.html
+    //那么这里的url == /index.html 
+    var file ='./' + url;
+    console.log(url);
+    //E:/PhpProject/html5/websocket/www/index.html 
+    fs.readFile( file , function(err,data){
+        if(err){
+            res.writeHeader(404,{
+                'content-type' : 'text/html;charset="utf-8"'
+            });
+            res.write('<h1>404错误</h1><p>你要找的页面不存在</p>');
+            res.end();
+        }else{
+            res.writeHeader(200,{
+                'content-type' : 'text/html;charset="utf-8"'
+            });
+            res.write(data);//将index.html显示在客户端
+            res.end();
+
+        }
+
+    });
+}).listen(8081);
+
+console.log('服务器开启成功');
+```
+
+main.html
+
+```
+var worker = new Worker('./worker.js');
+worker.addEventListener('message', function (e) {
+    console.log('MAIN: ', 'RECEIVE', e.data);
+ });
+ worker.postMessage('Hello Worker, I am main.js');
+```
+
+worker.js
+
+```
+onmessage = function (e) {
+    console.log('WORKER TASK: ', 'RECEIVE', e.data);
+    // 发送数据事件
+    postMessage('Hello, I am Worker');
+}
+```
+
+浏览器输出
+
+```
+WORKER TASK:  RECEIVE Hello Worker, I am main.js
+main.html:19 MAIN:  RECEIVE Hello, I am Worker
+```
+
+**共享线程**
+
+```
+// main.js
+var myWorker = new SharedWorker("worker.js");
+myWorker.port.start();
+myWorker.port.postMessage("hello, I'm main");
+myWorker.port.onmessage = function(e) {
+  console.log('Message received from worker');
+}
+// worker.js
+onconnect = function(e) {
+  var port = e.ports[0];
+  
+  port.addEventListener('message', function(e) {
+    var workerResult = 'Result: ' + (e.data[0] * e.data[1]);
+    port.postMessage(workerResult);
+  });
+  port.start();
+}
+```
+
+## PWA技术(渐进式网页应用)
+
+https://juejin.im/post/6844903821294977032 https://juejin.im/post/6844903599445639181
+
+### Service Worker
+
+service worker是实现PWA的核心，service worker是一个独立的浏览器线程，不会对当前程序的执行线程造成阻塞，通过service worker可以实现页面离线访问、用户消息推送等功能。 cacheStorage 缓存，它提供了一个ServiceWorker类型的工作者或window范围可以访问的所有命名缓存的主目录, 并维护字符串的映射名称到相应的 Cache 对象
+
+### Manifest
+
+定义了一个基于 JSON 的 List
+
+- 能够将你浏览的网页添加到你的手机屏幕上
+- 在 Android 上能够全屏启动，不显示地址栏 （ 由于 Iphone 手机的浏览器是 Safari ，所以不支持哦）
+- 控制屏幕 横屏 / 竖屏 展示
+- 定义启动画面
+- 可以设置你的应用启动是从主屏幕启动还是从 URL 启动
+- 可以设置你添加屏幕上的应用程序图标、名字、图标大小
+
+### Push Notification
+
+Push：服务器端将更新的信息传递给 SW ，Notification： SW 将更新的信息推送给用户。
