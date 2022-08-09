@@ -1,6 +1,8 @@
 [toc]
 
-### 什么是跨域
+# 跨域
+
+## 什么是跨域
 
 浏览器有同源策略，不允许ajax访问其他接口，主要防止CSRF攻击，因为如果一个网站登录状态，其他网站没有同源限制，可以通过ajax获取到数据，不安全。
 
@@ -25,9 +27,9 @@ DOM 节点
 AJAX 请求发送后，结果被浏览器拦截了
 ```
 
-### 跨域方式
+## 跨域方式
 
-#### 1.JSONP
+### 1.JSONP
 
 JSONP原理
 
@@ -35,9 +37,9 @@ JSONP原理
 - 服务器不一定真正有一个ch.html,因为服务器可以根据请求，动态生成一个文件返回，同理，js文件可能不存在
 - 返回内容格式callback(...),是一个函数，注意使用名称要一致
 
-##### 简单应用
+#### 简单应用
 
-```
+```js
 //客户端获取其他源的内容
 <script type="text/javascript">
     function jsonp(data){
@@ -57,11 +59,11 @@ jsonp({"num1":"js","num2":"json"})
 <script type="text/javascript" src="http://api.com?num=1&callback=jsonp"></script>  
 ```
 
-##### 用promise封装
+#### 用promise封装
 
 动态创建script，callback=func,后端 拼接为func(data)
 
-```
+```js
 // index.html
 function jsonp({ url, params, callback }) {
   return new Promise((resolve, reject) => {
@@ -90,7 +92,7 @@ jsonp({
 
 上面这段代码相当于向http://localhost:3000/say?wd=Iloveyou&callback=show这个地址请求数据，然后后台返回show('我不爱你')，最后会运行show()这个函数，打印出'我不爱你'
 
-```
+```js
 // server.js
 let express = require('express')
 let app = express()
@@ -103,11 +105,11 @@ app.get('/say', function(req, res) {
 app.listen(3000)
 ```
 
-##### 缺点
+#### 缺点
 
 - jsonp:支持浏览器与服务器双向通信，兼容性好，但是只支持get，有get的缺点
 
-#### 2.服务端设置http header
+### 2.服务端设置http header
 
 ```
 response.setHeader("Access-Control-Allow-Origin","http....ch.com,...")//允许跨域的域名
@@ -117,14 +119,14 @@ response.setHeader("Access-Control-Allow-Method","PUT,POST")
 response.setHeader("Access-Control-Allow-Credentials","true")//接收跨域的cookie
 ```
 
-#### 3.postmessage
+### 3.postmessage
 
 - postmessage要通过window使用
 - 传值用window.postmessage,获取值用addEventListener('message',function(){})
 - window.opener.postMessage
 - iframe.contentWindow.postMessage
 
-```
+```js
  http://localhost:3000/a.html页面向http://localhost:4000/b.html传递“我爱你”,然后后者传回"我不爱你"。
  
 // a.html，a中嵌入b，a通过iframe发送信息
@@ -149,7 +151,7 @@ response.setHeader("Access-Control-Allow-Credentials","true")//接收跨域的co
 
 新开窗口的例子
 
-```
+```js
 //A页面通过 window.open获得 B页面的句柄，向 B页面发送信号，并监听 B页面回传回来的信号
 <!-- A页面 -->
 <div id="msg"></div>
@@ -173,7 +175,7 @@ response.setHeader("Access-Control-Allow-Credentials","true")//接收跨域的co
 
 B页面接收 A页面的信号，并通过事件句柄反向对 A页面发送数据信号
 
-```
+```js
 <div id="box">color from a.html</div>
 <script type="text/javascript">
   window.addEventListener('message', event => {
@@ -191,7 +193,7 @@ B页面接收 A页面的信号，并通过事件句柄反向对 A页面发送数
 
 postmessage的方法需要验证源
 
-```
+```js
 //iframe的例子
 //父向子页面传值
 //父页面
@@ -249,7 +251,7 @@ bc.onmessage = function (e) {
 };
 ```
 
-#### 4.websocket
+### 4.websocket
 
 ```
 var ws=new WebSocket('wss/....org')
@@ -263,7 +265,7 @@ ws.onmessage=function(e){
 ws.onclose=function(){}
 ```
 
-#### 5.document.domain主域相同而子域不同
+### 5.document.domain主域相同而子域不同
 
 - 在http://www.a.com/a.html和http://script.a.com/b.html两个文件中分别加上document.domain = ‘[a.com](http://a.com/)’；然后通过a.html文件中创建一个iframe，去控制iframe的contentDocument
 
@@ -284,7 +286,7 @@ ifr.onload = function(){
 document.domain = 'a.com';
 ```
 
-#### 6. Node中间件代理(两次跨域)
+### 6. Node中间件代理(两次跨域)
 
 同源策略是浏览器需要遵循的标准，而如果是服务器向服务器请求就无需遵循同源策略。
 

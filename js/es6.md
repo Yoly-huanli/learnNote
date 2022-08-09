@@ -274,3 +274,38 @@ var obj = new Proxy({}, {
 ```
 var proxy = new Proxy(target, handler);
 ```
+
+
+
+
+
+
+
+# qita
+
+```
+
+// 补充，es6里super()用来继承，static静态方法表示该方法是直接通过类的方法来调用的，不能被实例继承
+class Father {
+    static testMethod() {
+        return 'hello';
+    }
+}
+ 
+Father.testMethod() // 'hello'
+var Child = new Father();
+Child.testMethod()
+// TypeError: Child.testMethod is not a function，这是因为Father中的testMethod方法是静态方法(有static关键字)，不会被实例化出来的Child继承
+
+//父类的静态方法可以被子类继承
+class Father {
+  static testMethod() {
+    return 'hello';
+  }
+}
+class Child extends Father {
+ 
+}
+Child.classMethod(); // 'hello'
+```
+
