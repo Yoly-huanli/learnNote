@@ -51,7 +51,7 @@ https://juejin.cn/post/6844904094281236487
 
 + Webpack.config.js
 
-```
+```js
 const HelloWorldPlugin = require('./plugins/basic.js')
 ...
 plugins: [
@@ -81,7 +81,7 @@ module.exports = HelloWorldPlugin
 + 结果，运行npm run webpack的过程中，打印出{ a: 1 }和helllo world!!!!
 + 参数说明
 
-```
+```js
 1.plugin本质上是一个类，有apply方法，接收compiler参数，compilercompiler对象包含了 Webpack 环境所有的的配置信息,提供了很多钩子函数，在webpack运行的各个阶段插入自己的处理
 2.options可以得到插件传入的自定义参数
 3.compilation.assets是

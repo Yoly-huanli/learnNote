@@ -652,6 +652,12 @@ paralleIUglifyPlugin
 IgnorePlugin
 ```
 
+## 2.loader和plugin的区别
 
+loader: 只能接收源文件之后进行一些处理和转化
+
+plugin：扩展功能, 能够使用到webpack提供的一些钩子进行处理
+
+  loader运行在打包文件之前（loader为在模块加载时的预处理文件）  plugins在整个编译周期都起作用。
 
 参考：https://juejin.cn/post/6844903544756109319
