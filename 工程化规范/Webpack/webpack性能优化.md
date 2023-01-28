@@ -174,32 +174,6 @@ hot-module-replacement-plugin 包给 webpack-dev-server 提供了热更新的能
 + webpack-dev-server(WDS)的功能可以使得生成的 bundle.js 文件通过 localhost://xxx 的方式去访问，而且实现了浏览器自动更新。
 + hot-module-replacement-plugin 的作用是提供 HMR 的 runtime，并且将 runtime 注入到 bundle.js 代码里面去。一旦磁盘里面的文件修改，那么 HMR server 会将有修改的 js module 信息发送给 HMR runtime，然后 HMR runtime 去局部更新页面的代码。因此这种方式可以不用刷新浏览器。
 
-
-
-## 2.概念解释
-
-### tree shaking
-
-一种性能优化的方法，在webpack入口有很多依赖的文件，但是有很多文件是没有用的文件或者只用到了这些依赖的一部分模块，tree shaking可以帮助我们删除没有用的部分
-
-（1）DCE消除
-
-+ 删除不能执行的代码
-+ 删除代码结果没有被使用到的代码
-+ 删除只会影响死变量的代码（let a=1,但是a没有被使用）
-
-消除的原理：抽象语法树
-
-（2）js里的DCE
-
-需要在js到达浏览器之前，由uglify来完成，但是uglify无法跨文件执行
-
-（3）tree shaking消除法
-
-更关注于无用模块的消除，消除那些引用了但并没有被使用的模块
-
-消除原理：依赖于ES6的模块特性，因为ES module，只能作为模块顶层的语句出现，而且import 的模块名只能是字符串常量，所以可以提前知道模块之间的依赖关系，然后做静态分析
-
 ### uglify消除
 
 原理：把原代码解析为AST，然后压缩为更小的AST，再还原出代码，从而优化
@@ -208,15 +182,5 @@ hot-module-replacement-plugin 包给 webpack-dev-server 提供了热更新的能
 
 ![image-20220602170105525](../../img/image-20220602170105525.png)
 
-年龄焦虑？？？对环境的思考没有想好
 
-点错技能树了
-
-顺势而为，环境感知，
-
-又获得感的环境，业务发展、公司发展、社会环境
-
-技能树点亮是适应环境
-
-国际化业务：未来互联网的发展环境，借势，点亮什么技能树，聚焦当前环境所需要的技能
 
