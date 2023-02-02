@@ -199,5 +199,9 @@ devtool: '#source-map',
 注意：
 
 + 开源项目也需要开源sourcemap文件，非开源文件不公开sourcemap文件
-+ 开发环境一般使用：eval-source-map或者cheap-source-map,线上环境一版使用source-map
++ 开发环境一般使用：eval-source-map或者cheap-source-map,线上环境一般使用source-map
+
+## 调试
+
+调试的时候需要设置为source-map，在浏览器的调试效果是可以看到全部的源码，但是每次修改都需要重新生成map文件，如果需要加快构建时间，那么选择eval-source-map
 
