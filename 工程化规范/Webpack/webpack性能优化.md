@@ -60,7 +60,6 @@ const HappyPack = require('happypack')
 ...
  module: {
         rules: [
-            // js
             {
                 test: /\.js$/,
                 // 把对 .js 文件的处理转交给 id 为 babel 的 HappyPack 实例
@@ -178,9 +177,58 @@ hot-module-replacement-plugin 包给 webpack-dev-server 提供了热更新的能
 
 原理：把原代码解析为AST，然后压缩为更小的AST，再还原出代码，从而优化
 
+## 缓存
 
++ cache-loader
++ Threadloader
 
-![image-20220602170105525](../../img/image-20220602170105525.png)
+## 组件异步加载
 
+【1】
 
+就是组件用到的时候再加载，没用到就先不加载，表现为异步加载的组件，在用到的时候才会进行```<script src="xxx.js"></script>```
+
+### 使用方法
+
++ import按需引入
+
+  ```vue
+  const App = () => import('./pages/app')
+  const routes = [
+      {
+          path: '/',
+          name: 'app',
+          meta: {
+              title: '下属报表'
+          },
+          component: App
+      }
+  ]
+  ```
+
++ Vue式异步加载组件 - AMD风格
+
+  ```JS
+  const App = resolve => require(['./pages/app'], resolve)
+  ```
+
++ webpack的require.ensuire() - CMD风格
+
+       ```js
+       const App = r => require.ensure([], () => r(require('./pages/app')), 'app')
+       ```
+
+### 实现原理
+
+被异步加载的文件,被 ``` __webpack_require__.e```包裹
+
+```js
+ return __webpack_require__.e(/*! import() | HelloWorld */ \"HelloWorld\").then(__webpack_require__.bind(null, /*! ./components/HelloWorld.vue */ \"./src/components/HelloWorld.vue\"));
+```
+
+ ``` __webpack_require__.e```函数原理
+
++ 先判断这个chunkId是否被加载过
++ 没有被加载过就去创建一个Promise，在Promise里面去创建一个script标签，然后设置src的路径
++ 当代码被加载完成，通过`webpackJsonpCallback`执行。
 

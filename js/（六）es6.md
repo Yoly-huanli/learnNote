@@ -1,5 +1,293 @@
 [toc]
 
+# es6新特性概览
+
++ const、let
++ 模版字符串
++ 箭头函数
++ 函数参数的默认值
++ ...操作符
++ 对象和数组解构
++ for...of 和 for...in
++ 类
+
+# ES6转换为ES5的思路是什么
+
+ES6 转 ES5 目前行业标配是用 Babel，转换的大致流程如下：
+
+```
+解析：解析代码字符串，生成 AST；
+转换：按一定的规则转换、修改 AST；
+生成：将修改后的 AST 转换成普通代码。
+```
+
+如果不用工具，纯人工的话，就是使用或自己写各种 polyfill 了。
+
+# let与const
+
+### const 和 let 声明的变量不在 window 上
+
+```
+let aa = 1;
+const bb = 2;
+console.log(window.aa); // undefined
+console.log(window.bb); // undefined
+```
+
+用 let 和 const 声明的全局变量并没有在全局对象中，只是一个块级作用域（Script）中.
+
+```js
+let aa = 1;
+const bb = 2;
+
+console.log(aa); // 1
+console.log(bb); // 2
+
+相当于：
+(function(){
+         var  a = 1;
+         var b = 2;
+})()
+```
+
+其他
+
+```
+if(!("a" in window)) {
+    var a = 1;
+}
+alert(a);    //    undefiend
+```
+
+
+
+
+
+### var let const的区别
+
+共同点
+
+```
+都符合作用域链，都可以访问上一层作用域链的变量
+```
+
+不同点
+
+```
+变量提升
+能不能重复声明
+暂时性死区
+块级作用域
+```
+
+- （1）var存在变量提升，会把变量声明提前,可以再声明之前使用，值为undefined,而let不行，只是声明提前，而没有初始化
+
+```
+var：遇到有var的作用域，在任何语句执行前都已经完成了声明和初始化，也就是变量提升而且拿到undefined的原因由来
+function： 声明、初始化、赋值一开始就全部完成，所以函数的变量提升优先级更高
+let：解析器进入一个块级作用域，发现let关键字，变量只是先完成声明，并没有到初始化那一步。此时如果在此作用域提前访问，则报错xx is not defined，这就是暂时性死区的由来。等到解析到有let那一行的时候，才会进入初始化阶段。如果let的那一行是赋值操作，则初始化和赋值同时进行
+const、class都是同let一样的道理
+```
+
+对比于var，let、const只是解耦了声明和初始化的过程，var是在任何语句执行前都已经完成了声明和初始化，let、const仅仅是在任何语句执行前只完成了声明。
+
+```js
+   console.log('a',a) //undefined
+   console.log('b',b) //Uncaught ReferenceError: b is not defined
+   var a=1
+   let b=12
+   
+   // 相当于
+   var a
+   console.log(a)
+   a=1
+```
+
+- （2）在全局作用域下使用var，变量会挂载到window上，而let不会。在同一个作用域下，var可以重复声明，let不行。
+
+```
+   console.log('a',window.a) //undefined
+   console.log('b',window.b) //undefined
+   var a=1
+   let b=12
+   console.log('aa',window.a) //1
+   console.log('bb',window.b) //undefined
+```
+
+- （3）let const存在暂时性死区，也就是，在同一个作用域内内，只要用到了let，const，在它们声明之前使用了它们，就会报错
+
+```
+function hello(){
+   hello1='hello'
+   console.log('hello',hello1) //ReferenceError: hello1 is not defined,
+                            
+    //虽然看起来是定义了一个全局变量应该可以输出，但是在这个块级作用域
+                             
+    //使用了let，那么由于暂时性死区，在声明之前不能使用，因此会报错
+   let hello1
+   console.log('hello',hello1)// 注释前两行，此时输出undefined
+   hello1='hello1'
+   console.log('hello',hello1)
+
+}
+hello()
+```
+
+不同作用域可以重复声明
+
+```
+const web='aa';
+function(){
+    const web='bb'
+}
+```
+
+- var没有块级作用域，let，const有
+
+```
+为什么要有块级作用域
+变量污染
+```
+
+- var会直接在栈里分配一个内存空间，等实际执行到语句时，再保存变量。如果遇到引用类型的变量，会去堆里开辟一个空间来保存对象，然后在栈里存储指向对象的指针。 let不会直接去栈里分配内存空间，而是做一个**预检查**，如果有同名变量就会报错。
+
+### let const的区别
+
+- const时必须已经赋值，let不需要
+
+```
+const保证的时引用地址不变，
+因此如果用const定义基本类型值，如果改变会重新在内存空间开辟地址，引用指针改变，报错
+如果const定义的是引用类型的值，那么改变里边的属性引用指针不变，是可以改变的
+```
+
+- const声明的常量不能更改，let可以
+
+```
+const obj={
+    name:'lili',
+    ageP:'17'
+};
+obj.name='hello';
+console.log(obj)//age: "17" name: "hello"
+```
+
+### 补充Object.freeze()
+
+在严格模式下使用Object.freeze,会使得引用类型也完全无法改变
+
+```
+"use strict"
+const obj={
+    name:'lili',
+    age:'17'
+};
+Object.freeze(obj);
+obj.name='hello';
+console.log(obj);
+```
+
+# 模板字符串
+
+```
+let name='mary'
+let age='23'
+console.log('name is' + name + 'age is'+age) //name ismaryage is23
+console.log(`name is ${name} age is ${age}`) //name is mary age is 23
+```
+
+- 用反引号
+- 变量用${}
+- 支持空格，回车
+
+```
+//${}也支持函数和计算
+function showname(){
+    return 'miaomiao'
+}
+let str=`hello ${showname()}` //hello miaomiao
+console.log(str)
+console.log(`hello ${5+6}`) //hello 11
+```
+
+模板字符串内可以再次嵌套字符串
+
+# 新数据结构
+
+------
+
+### symbol
+
+它的功能类似于一种标识唯一性的ID,之前的解决方案是字符串加前缀使得其为唯一的。相当于一个唯一的字符串
+
+#### 定义方式
+
+- 第一种定义方式
+
+```
+let s1=Symbol('name')
+let s2=Symbol('age')
+console.log(typeof s1) //symbol
+console.log(s1.description) //name
+console.log(s1===s2) //false
+```
+
+- 第二种定义方式
+
+```
+let s1=Symbol.for('name')
+let s2=Symbol.for('name')
+console.log(s1.description) //name
+console.log(s1===s2) //true
+```
+
+- Symbol类型可以作为object的key值，但是Object.keys,values,JSON.stringify无法获取到它的值，需要使用新增的API,可以用于类内部属性
+
+```
+// 使用Object.keys()无法获取Symbol类型
+//只使用Object.getOwnPropertySymbols()只能获取Symbol属性的值
+let key of Object.getOwnPropertySymbols(hd)
+//Reflect.ownkeys全可以获取
+let key of Reflect.ownkeys(hd)
+```
+
+- 不能为Symbol设置key，它本质上接近字符串
+
+#### 使用场景
+
+- 字符串耦合
+
+```
+//被覆盖
+let user1="李四";
+let user2="李四";
+let obj={
+    [user1]:'40',
+    [user2]:'50'
+}
+console.log(obj) //{李四: "50"}
+let user1={
+    'name':'李四',
+    'key':Symbol()
+}
+let user2={
+    'name':'李四',
+    'key':Symbol()
+}
+let obj={
+    [user1.key]:'40',
+    [user2.key]:'50'
+}
+console.log(obj) //Symbol(): "40" Symbol(): "50"
+console.log(obj[user1.key]) //40
+```
+
+解决可能重复的情况
+
+
+
+
+
 # 新的数据结构
 
 ## Set()不可重复类型

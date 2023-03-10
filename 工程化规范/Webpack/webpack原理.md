@@ -4,6 +4,8 @@
 
 ## webpack构建原理
 
+【1】
+
 https://developer.aliyun.com/article/61047
 
 https://juejin.cn/post/6844904094281236487
@@ -47,8 +49,6 @@ https://juejin.cn/post/6844904094281236487
 
 ## 手写plugin
 
-## 使用方法
-
 + Webpack.config.js
 
 ```js
@@ -84,7 +84,7 @@ module.exports = HelloWorldPlugin
 ```js
 1.plugin本质上是一个类，有apply方法，接收compiler参数，compilercompiler对象包含了 Webpack 环境所有的的配置信息,提供了很多钩子函数，在webpack运行的各个阶段插入自己的处理
 2.options可以得到插件传入的自定义参数
-3.compilation.assets是
+3.compilation.assets写入文件
 ```
 
 另一个例子，把文件名称写入到文件中，并打包到dist(https://juejin.cn/post/6888936770692448270#heading-9)
@@ -140,6 +140,35 @@ module.exports = function (source) {
   return result
 }
 ```
+
+## 常用的loader和plugin
+
+loader
+
+```
+处理css： css-loader,style-loader,stylus-loader，MiniCssExtractPlugin
+处理图片：file-loader，html-withimg-loader，url-loader
+处理js: babel-loader
+优化性能：
+```
+
+plugin
+
+```
+html文件：html-webpack-plugin
+优化性能：
+terser-webpack-plugin
+paralleIUglifyPlugin
+IgnorePlugin
+```
+
+## loader和plugin的区别
+
+loader: 只能接收源文件之后进行一些处理和转化
+
+plugin：扩展功能, 能够使用到webpack提供的一些钩子进行处理
+
+  loader运行在打包文件之前（loader为在模块加载时的预处理文件）  plugins在整个编译周期都起作用。
 
 # sourceMap
 
