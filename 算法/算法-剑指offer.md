@@ -351,9 +351,137 @@ var isValid = function(s) {
 };
 ```
 
+# 树
+
+## 树与列表转换
+
+list转化为树
+
+```JS
+// 原始 list 如下
+let list =[
+    {id:1,name:'部门A',parentId:0},
+    {id:2,name:'部门B',parentId:0},
+    {id:3,name:'部门C',parentId:1},
+    {id:4,name:'部门D',parentId:1},
+    {id:5,name:'部门E',parentId:2},
+    {id:6,name:'部门F',parentId:3},
+    {id:7,name:'部门G',parentId:2},
+    {id:8,name:'部门H',parentId:4}
+];
+const result = convert(list, ...);
+```
+
+- 思路，检查父id对应的对象，是否有children属性，有则直接push进去，没有则创建，list里的item本身就是一个引用类型，所以obj的item改变，list的item也会改变，最终list
+
+```js
+const result = convert(list);
+function convert(list) {
+  const obj = {}
+  const res = []
+  list.forEach(item => {
+    obj[item.id] = item
+  })
+  list.forEach(item => {
+    if (item.parentId !== 0) {        
+      obj[item.parentId]['children'] ? obj[item.parentId]['children'].push(item) : obj[item.parentId]['children'] = [item]
+    } else {
+      res.push(item)
+    }
+  })
+  return res
+}
+console.log(result)
+```
+
 # 其他
 
-# 1.左旋转字符串
+## 1.岛屿数量
+
+https://leetcode.cn/problems/number-of-islands/?favorite=2cktkvj
+
+给你一个由 `'1'`（陆地）和 `'0'`（水）组成的的二维网格，请你计算网格中岛屿的数量。岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
+
+```js
+输入：grid = [
+  ["1","1","1","1","0"],
+  ["1","1","0","1","0"],
+  ["1","1","0","0","0"],
+  ["0","0","0","0","0"]
+]
+输出：1
+```
+
+题解：
+
+> 岛屿问题，固定套路 Flood fill 算法(在一个区域内，从某个点开始往外扩散找到与其联通的所有点，最终获得一个区域块,实现上通常为 DFS 或 BFS。)
+>
+> ![image-20230315025109568](../img/image-20230315025109568.png)
+
+```js
+function numIslands(grid) {
+  const m = grid.length; //行
+  const n = grid[0].length; //列
+  let count = 0;
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (grid[i][j] === '1') { // 发现岛屿的一部分
+        count++;
+        floodFill(grid, i, j);
+      }
+    }
+  }
+  return count;
+};
+
+// 深度遍历，找到的每一个为1的一直往深度扩展为1的全变为0，除非触及到了岛屿边界
+function floodFill(grid, i, j) {
+  const m = grid.length; //  行
+  const n = grid[0].length; // 列
+  if (i < 0 || i >= m || j < 0 || j >= n) return; // 跑到地图外了
+  if (grid[i][j] === '0') return; // 到达岛屿边缘了
+
+  grid[i][j] = '0'; // 淹没
+  floodFill(grid, i - 1, j);
+  floodFill(grid, i + 1, j);
+  floodFill(grid, i, j - 1);
+  floodFill(grid, i, j + 1);
+}
+```
+
+### 岛屿的最大面积
+
+找到给定的二维数组中最大的岛屿面积。如果没有岛屿，则返回面积为 `0` 。
+
+> 计算每次淹没多少个1
+
+```js
+var maxAreaOfIsland = function(grid) {
+    const m = grid.length;
+    const n = grid[0].length;
+    let maxNum =0;
+    for(let i=0;i<m;i++){
+        for(let j=0;j<n;j++){
+          if(grid[i][j]===1){
+              let areaOnly = fillflood(grid,i ,j)
+              maxNum = areaOnly> maxNum? areaOnly: maxNum
+          }
+        }
+    }
+    return maxNum
+};
+
+function fillflood(grid,i ,j){
+    const m = grid.length;
+    const n = grid[0].length;
+    if(i<0||i>=m || j<0 ||j>=n) return 0;
+    if(grid[i][j]=== 0) return 0;
+    grid[i][j] = 0
+    return fillflood(grid,i-1 ,j)+ fillflood(grid,i+1 ,j)+ fillflood(grid,i ,j-1) + fillflood(grid,i ,j+1)+1
+}
+```
+
+## .左旋转字符串
 
 【JZ58】S = ”abcXYZdef” , 要求输出循环左移 3 位后的结果，即 “XYZdefabc” ，"aab",10输出"aba"
 
@@ -375,7 +503,7 @@ function LeftRotateString(str, n)
 }
 ```
 
-# 3.**和为S的两个数字**
+## 3.**和为S的两个数字**
 
 [**JZ57**]
 
@@ -416,7 +544,7 @@ function FindNumbersWithSum(array, sum)
 }
 ```
 
-# 4.移动0到数组末尾
+## 4.移动0到数组末尾
 
 [leetcode [283. 移动零](https://leetcode.cn/problems/move-zeroes/)]
 
@@ -466,8 +594,7 @@ function FindNumbersWithSum(array, sum)
   };
   ```
 
-
-# 6.寻找1-100以内所有回文数
+## .寻找1-100以内所有回文数
 
 回文数：121
 
@@ -520,7 +647,7 @@ console.timeEnd('findNumber2')
 
 结论：尽量不要去改变原有的数据结构
 
-## 7.斐波那契数列
+## 6.斐波那契数列
 
 （青蛙跳有几种方式）
 

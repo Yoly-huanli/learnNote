@@ -28,12 +28,6 @@ https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible
 
 这个选择器可以有效地根据用户的输入方式 (鼠标 vs 键盘) 展示不同形式的焦点。
 
-
-
-浏览器自定义标签
-
-微前端：micro-zoe
-
 ==============
 
 7.timeline
