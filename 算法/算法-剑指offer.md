@@ -18,7 +18,7 @@ console.timeEnd('findNumber')
 
 # 二叉树
 
-## 二叉树所有路径
+## 1.二叉树所有路径
 
 写出二叉树所有的路径
 
@@ -125,7 +125,7 @@ function dfs(root, sum){
 }
 ```
 
-## 二叉树的遍历
+## 2.二叉树的遍历
 
 二叉树每个节点最多有两个子节点，每个树的树节点都有value,left,right组成，left，right可能不存在，如下是一棵树的结构表示
 
@@ -273,6 +273,17 @@ var postorderTraversal = function(root) {
 };
 ```
 
+## 寻找第K小值
+
+寻找 BST 里的第 K 小值
+
+```JS
+export function getKthValue(node: ITreeNode, k: number): number | null {
+    inOrderTraverse(node)
+    return arr[k - 1] || null
+}
+```
+
 # 栈
 
 ## 有效的括号
@@ -394,6 +405,37 @@ function convert(list) {
 console.log(result)
 ```
 
+# 链表
+
+## 1.反转链表
+
+【JZ24】反转链表
+
+![image-20220425013312563](../img/image-20220425013312563.png)
+
+思想：每次把下一个指向next暂存起来避免指向丢失
+
+```js
+/*function ListNode(x){
+    this.val = x;
+    this.next = null;
+}*/
+function ReverseList(pHead)
+{
+    let pre = null
+    let cur = pHead
+    while(cur){
+        let next = cur.next
+        cur.next = pre
+        pre = cur
+        cur = next
+    }
+    return pre
+}
+```
+
+### 
+
 # 其他
 
 ## 1.岛屿数量
@@ -503,149 +545,7 @@ function LeftRotateString(str, n)
 }
 ```
 
-## 3.**和为S的两个数字**
 
-[**JZ57**]
-
-输入：
-
-```
-[1,2,4,7,11,15],15
-```
-
-返回值：
-
-```
-[4,11]
-```
-
-思路：**递增序列**，使用双指针
-
-```js
-function FindNumbersWithSum(array, sum)
-{
-    if(array.length===0){
-        return []
-    }
-    let leftHead = 0
-    let rightHead = array.length-1
-    while(leftHead<rightHead){
-        if(array[leftHead]+array[rightHead]===sum){
-            return [array[leftHead],array[rightHead]]
-        }
-        if(array[leftHead]+array[rightHead]<sum){
-        leftHead=leftHead+1
-        }
-        if(array[leftHead]+array[rightHead]>sum){
-            rightHead=rightHead-1
-        }
-    }
-    return []
-}
-```
-
-## 4.移动0到数组末尾
-
-[leetcode [283. 移动零](https://leetcode.cn/problems/move-zeroes/)]
-
-```
-输入: nums = [0,1,0,3,12]
-输出: [1,3,12,0,0]
-```
-
-要求：在原数组的基础上修改，不能使用新数组
-
-+ 思路1：循环一次，是0则push到数组末尾，然后把当前位置0通过splice删除掉
-
-  ```js
-  var moveZeroes = function(nums) {
-     for(let i = 0, zerolen = 0; i<nums.length-zerolen;i++){
-         if(nums[i]===0){
-             nums.push(nums[i])
-             nums.splice(i,1)
-             i--
-             zerolen++
-         }
-     }
-  };
-  ```
-
-  + 该方法时间复杂度是O(n^2)，一次是循环，一次是splice，数组是有序存储的，当一个位置元素被删除之后，它后边的元素都要往前挪动一个位置，也就是splice本身在删除的时候复杂度就是O（n）
-  + zerolen末尾补0的个数，确定是补进去的0，就不需要再次循环遍历了
-  + i--，splice之后要往回挪动一次，抵消splice的影响
-
-+ 考虑另一种思路，双指针，j指向第一个0的位置，指向j之后第一个不为0的位置，交换位置，然后j继续向后移动，此时时间复杂度为O（n）
-
-  ```js
-  var moveZeroes = function(nums) {
-     let i;
-     let j =-1;
-     for(let i=0;i<nums.length;i++){
-         if(nums[i]===0 && j<0){
-             j=i
-         }
-         if(nums[i]!==0 && j>=0){
-             const n = nums[i]
-             nums[i]= nums[j]
-             nums[j]=n
-             j++
-         }
-     }
-  };
-  ```
-
-## .寻找1-100以内所有回文数
-
-回文数：121
-
-解法1：通过字符串判断
-
-```js
-function findNumber(max){
-       let arr =[]
-       for(let i =1;i<=max;i++){
-         if((i+'').split('').reverse().join('')===i+''){
-            arr.push(i)
-         }
-       }
-       return arr
-     }
-```
-
-解法2：数字直接反转
-
-```js
-function findNumber2(max){
-       let arr =[]
-       for(let i =1;i<=max;i++){
-         // 比如1234直接反转为4321
-         let n = i
-         let revNumber = 0
-         while(n>0){
-           revNumber = revNumber*10 + n%10
-           n = Math.floor(n/10)
-         }
-         if(i === revNumber){
-           arr.push(i)
-         }
-       }
-       return arr
-     }
-```
-
-性能比较:
-
-```js
-console.time('findNumber')
-console.log('findNumber', findNumber(100)) //0.810302734375 ms
-console.timeEnd('findNumber')
-
-console.time('findNumber2')
-console.log('findNumber2', findNumber2(100)) //0.345947265625 ms
-console.timeEnd('findNumber2')
-```
-
-结论：尽量不要去改变原有的数据结构
 
 ## 6.斐波那契数列
 
@@ -691,3 +591,89 @@ var fib = function(n) {
 };
 ```
 
+
+# 其他
+## JZ17 打印从1到最大的n位数
+> 描述
+输入数字 n，按顺序打印出从 1 到最大的 n 位十进制数。比如输入 3，则打印出 1、2、3 一直到最大的 3 位数 999。
+```ts
+export function printNumbers(n: number): number[] {
+    if(n <=0) return []
+    const max = 10**n-1
+    const res: number[] = []
+    for (let i:number =1;i<=max; i++){
+        res.push(i)
+    }
+    return res
+}
+```
+## JZ83 剪绳子（进阶版）
+> 给你一根长度为 n 的绳子，请把绳子剪成整数长的 m 段（ m 、 n 都是整数， n > 1 并且 m > 1 ， m <= n ），每段绳子的长度记为 k[1],...,k[m] 。请问 k[1]*k[2]*...*k[m] 可能的最大乘积是多少？例如，当绳子的长度是 8 时，我们把它剪成长度分别为 2、3、3 的三段，此时得到的最大乘积是 18 。
++ 动态规划<有其他解法更快，但是不太好理解>
+
+```ts
+export function cutRope(number: number): number {
+    // 边界情况
+    if (number < 2) return 0;
+    if (number === 2) return 1;
+    if (number === 3) return 2;
+
+    // 创建一个数组来存储子问题的最优解
+    const products = new Array(number + 1);
+
+    // 0、1、2和3长度的绳子的最大乘积已知
+    products[0] = 0;
+    products[1] = 1;
+    products[2] = 2;
+    products[3] = 3;
+
+    // 从底向上计算每个子问题的最优解
+    for (let i = 4; i <= number; i++) {
+        let max = 0;
+        // j表示剪掉的绳子的长度
+        for (let j = 1; j <= Math.floor(i / 2); j++) {
+            const product = products[j] * products[i - j];
+            if (product > max) {
+                max = product;
+            }
+        }
+        products[i] = max;
+    }
+
+    // 最终结果存储在products[n]中
+    return products[number] % 998244353;
+}
+```
+## JZ81 调整数组顺序使奇数位于偶数前面(二)
+> 输入：[1,2,3,4]
+返回值：
+[1,3,2,4]
+说明：
+[3,1,2,4]或者[3,1,4,2]也是正确答案 
+
+其他思路： 前后各一个指针进行移动
+```TS
+export function reOrderArrayTwo(array: number[]): number[] {
+    // write code here
+    if(!array || array.length == 0 || array.length == 1){
+        return array;
+    }
+    let first = 0, last = array.length - 1;
+    while(first < last){
+        if(array[first] % 2 == 1){
+            first++;
+        }
+        if(array[last] % 2 == 0){
+            last--;
+        }
+        if(array[first] % 2 == 0 && array[last] % 2 == 1){
+            let temp = array[first];
+            array[first] = array[last];
+            array[last] = temp;
+            first++;
+            last--;
+        }
+    }
+    return array;
+}
+```

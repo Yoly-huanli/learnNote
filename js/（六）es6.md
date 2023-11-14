@@ -2,14 +2,11 @@
 
 # es6新特性概览
 
-+ const、let
-+ 模版字符串
-+ 箭头函数
-+ 函数参数的默认值
-+ ...操作符
-+ 对象和数组解构
-+ for...of 和 for...in
-+ 类
++ 语法：...操作符、对象和数组解构、for...of 和 for...in、模版字符串
++ 类型：const、let
++ 原型和继承： 类
++ 内置对象
++ 函数的标准库： 箭头函数、函数参数的默认值
 
 # ES6转换为ES5的思路是什么
 
@@ -23,36 +20,26 @@ ES6 转 ES5 目前行业标配是用 Babel，转换的大致流程如下：
 
 如果不用工具，纯人工的话，就是使用或自己写各种 polyfill 了。
 
-# let与const
+# 1.let与const
 
-### const 和 let 声明的变量不在 window 上
-
-```
-let aa = 1;
-const bb = 2;
-console.log(window.aa); // undefined
-console.log(window.bb); // undefined
-```
-
-用 let 和 const 声明的全局变量并没有在全局对象中，只是一个块级作用域（Script）中.
+const 和 let 声明的变量不在 window 上, 只是一个块级作用域（Script）中.
 
 ```js
 let aa = 1;
 const bb = 2;
-
-console.log(aa); // 1
-console.log(bb); // 2
+console.log(window.aa); // undefined
+console.log(window.bb); // undefined
 
 相当于：
 (function(){
-         var  a = 1;
-         var b = 2;
+  var  a = 1;
+  var b = 2;
 })()
 ```
 
 其他
 
-```
+```js
 if(!("a" in window)) {
     var a = 1;
 }
@@ -61,99 +48,73 @@ alert(a);    //    undefiend
 
 
 
-
-
-### var let const的区别
+## var let const的区别
 
 共同点
 
-```
+```js
 都符合作用域链，都可以访问上一层作用域链的变量
 ```
 
 不同点
 
 ```
-变量提升
+变量提升：let没有变量提升
 能不能重复声明
 暂时性死区
 块级作用域
 ```
 
-- （1）var存在变量提升，会把变量声明提前,可以再声明之前使用，值为undefined,而let不行，只是声明提前，而没有初始化
+### (1)let没有变量提升
+
+var存在变量提升，提前完成了声明和初始化， 赋值为undefined， 可以在赋值之前使用，let没有变量提升， 必须先声明，再赋值， 再去使用
 
 ```
-var：遇到有var的作用域，在任何语句执行前都已经完成了声明和初始化，也就是变量提升而且拿到undefined的原因由来
-function： 声明、初始化、赋值一开始就全部完成，所以函数的变量提升优先级更高
+var：提前完成了声明和初始化，赋值为undefined
+function： 声明、初始化、赋值一开始就全部完成，函数的变量提升优先级更高
 let：解析器进入一个块级作用域，发现let关键字，变量只是先完成声明，并没有到初始化那一步。此时如果在此作用域提前访问，则报错xx is not defined，这就是暂时性死区的由来。等到解析到有let那一行的时候，才会进入初始化阶段。如果let的那一行是赋值操作，则初始化和赋值同时进行
 const、class都是同let一样的道理
 ```
 
-对比于var，let、const只是解耦了声明和初始化的过程，var是在任何语句执行前都已经完成了声明和初始化，let、const仅仅是在任何语句执行前只完成了声明。
+### (2)let不能重复声明
+
+在全局作用域下使用var，变量会挂载到window上，而let不会。在同一个作用域下，var可以重复声明，let不行。
+
+### (3)let const存在暂时性死区
+
+let const存在暂时性死区，也就是，在同一个作用域内内，只要用到了let，const，在它们声明之前使用了它们，就会报错
 
 ```js
-   console.log('a',a) //undefined
-   console.log('b',b) //Uncaught ReferenceError: b is not defined
-   var a=1
-   let b=12
-   
-   // 相当于
-   var a
-   console.log(a)
-   a=1
-```
-
-- （2）在全局作用域下使用var，变量会挂载到window上，而let不会。在同一个作用域下，var可以重复声明，let不行。
-
-```
-   console.log('a',window.a) //undefined
-   console.log('b',window.b) //undefined
-   var a=1
-   let b=12
-   console.log('aa',window.a) //1
-   console.log('bb',window.b) //undefined
-```
-
-- （3）let const存在暂时性死区，也就是，在同一个作用域内内，只要用到了let，const，在它们声明之前使用了它们，就会报错
-
-```
 function hello(){
    hello1='hello'
-   console.log('hello',hello1) //ReferenceError: hello1 is not defined,
-                            
-    //虽然看起来是定义了一个全局变量应该可以输出，但是在这个块级作用域
-                             
-    //使用了let，那么由于暂时性死区，在声明之前不能使用，因此会报错
+  //ReferenceError: hello1 is not defined,
+   console.log('hello',hello1)                        
+   //虽然看起来是定义了一个全局变量应该可以输出，但是在这个块级作用域使用了let，那么由于暂时性死区，在声明之前不能使用，因此会报错
    let hello1
-   console.log('hello',hello1)// 注释前两行，此时输出undefined
-   hello1='hello1'
-   console.log('hello',hello1)
-
 }
 hello()
 ```
 
 不同作用域可以重复声明
 
-```
+```js
 const web='aa';
 function(){
     const web='bb'
 }
 ```
 
-- var没有块级作用域，let，const有
+### (4)let有块级作用域
 
-```
-为什么要有块级作用域
-变量污染
-```
+- var没有块级作用域，let，const有块级作用域，避免变量污染
 
-- var会直接在栈里分配一个内存空间，等实际执行到语句时，再保存变量。如果遇到引用类型的变量，会去堆里开辟一个空间来保存对象，然后在栈里存储指向对象的指针。 let不会直接去栈里分配内存空间，而是做一个**预检查**，如果有同名变量就会报错。
+var会直接在栈里分配一个内存空间，等实际执行到语句时，再保存变量。如果遇到引用类型的变量，会去堆里开辟一个空间来保存对象，然后在栈里存储指向对象的指针。 let不会直接去栈里分配内存空间，而是做一个**预检查**，如果有同名变量就会报错。
 
-### let const的区别
+## let const的区别
 
-- const时必须已经赋值，let不需要
+### (1)const声明时必须赋值
+
+const时必须已经赋值，let不需要
 
 ```
 const保证的时引用地址不变，
@@ -161,9 +122,11 @@ const保证的时引用地址不变，
 如果const定义的是引用类型的值，那么改变里边的属性引用指针不变，是可以改变的
 ```
 
-- const声明的常量不能更改，let可以
+### (2)const声明的常量不能更改
 
-```
+const声明的常量不能更改，let可以
+
+```js
 const obj={
     name:'lili',
     ageP:'17'
@@ -176,7 +139,7 @@ console.log(obj)//age: "17" name: "hello"
 
 在严格模式下使用Object.freeze,会使得引用类型也完全无法改变
 
-```
+```js
 "use strict"
 const obj={
     name:'lili',
@@ -187,14 +150,8 @@ obj.name='hello';
 console.log(obj);
 ```
 
-# 模板字符串
-
-```
-let name='mary'
-let age='23'
-console.log('name is' + name + 'age is'+age) //name ismaryage is23
-console.log(`name is ${name} age is ${age}`) //name is mary age is 23
-```
+***********
+# 2.模板字符串
 
 - 用反引号
 - 变量用${}
@@ -211,6 +168,10 @@ console.log(`hello ${5+6}`) //hello 11
 ```
 
 模板字符串内可以再次嵌套字符串
+
+
+
+
 
 # 新数据结构
 
@@ -483,9 +444,16 @@ map4.set('k2', 2).set('k3', 4).set('k4', 5)
     WeakMap
         只接受对象作为键名（null除外），不接受其他类型的值作为键名
         键名是弱引用，键值可以是任意的，键名所指向的对象可以被垃圾回收，此时键名是无效的
-        不能遍历，方法有get、set、has、delete
+        不能遍历，方法有get、set、has、delete， 不能使用clear
 
-# 箭头函数
+# 函数
+## rest参数
++ 在函数参数中收集剩余的参数，将它们放入一个数组中
++ rest参数放在最后一个位置
+```js
+function fun1(a, b, c, ...args) {}
+```
+## 箭头函数
 
 ### 与普通函数的区别
 
@@ -561,6 +529,16 @@ var obj = new Proxy({}, {
 
 ```
 var proxy = new Proxy(target, handler);
+```
++ 可取消proxy： Proxy.revocable()返回一个对象， revoke执行完后，取消了Proxy实例，当再次访问Proxy实例时会报错， 使用场景：目标对象不允许直接访问，必须通过代理访问，一但访问结束，就是收回代理权，不允许再次访问。
+```js
+let target = {}
+let handler = {}
+let {proxy, revoke} = Proxy.revocable(target , handler );
+
+console.log(proxy.foo = 100);  // 100
+revoke()  // 取消Proxy实例
+console.log(proxy.foo); //  Cannot perform 'get' on a proxy that has been revoked
 ```
 
 
