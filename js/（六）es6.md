@@ -169,23 +169,153 @@ console.log(`hello ${5+6}`) //hello 11
 
 模板字符串内可以再次嵌套字符串
 
+# 3. class
 
+面向对象的三个特性： 封装、继承、多态
 
+内部还是原型的继承
 
+## 书写
 
-# 新数据结构
+- 方法之间不用逗号
+- 用new实例化
+- 原本属性用this分别为每个实例创建属性，方法在原型上功能共用，减少内存的使用，class的方法则直接放在了原型上
 
-------
+```js
+class Parent { 
+  constructor(value) { 
+    this.val = value 
+  } 
+  getValue() { 
+    console.log(this.val) 
+  } 
+} 
+class Child extends Parent { 
+  constructor(value) { 
+      super(value) 
+      this.val = value 
+  } 
+} 
+let child = new Child(1) 
+child.getValue() // 1 
+child instanceof Parent // true
+```
 
-### symbol
+## class声明的方法不能被遍历
 
-它的功能类似于一种标识唯一性的ID,之前的解决方案是字符串加前缀使得其为唯一的。相当于一个唯一的字符串
+在class里定义的方法直接不能被遍历到。只能遍历出特征。
 
-#### 定义方式
+## class运行在严格模式
+
+class里使用的是严格模式，也就是this不能得到window
+
+## 属性
+
+### 静态属性
+
+直接在构造函数上的属性
+
+```js
+function User(url){
+   this.url=url
+}
+User.url='lili'
+
+let user1=new User('zhangsan')
+console.log(user1) //User{url: "zhangsan"}
+console.log(User.url) //'lili'
+```
+
+static，外界访问不到
+
+```js
+class User{
+   static url='lili'
+}
+
+let user1=new User()
+console.log(user1) //User{}
+console.log(User.url) //'lili'
+```
+
+### 属性的保护
+
+外界能对属性进行修改
+
+```js
+class User{
+   age='34'
+   constructor(url){
+      this.url=url
+   }
+}
+
+let user1=new User('lisi')
+user1.name='zhangsan'
+user1.age='55'
+console.log(user1) //User{age: "55", url: "lisi", name: "zhangsan"}
+```
+
+- 受保护的属性：类及其子类可以访问，外部必须设置set,get方法才能访问
+- 使用命名规则保护属性,下划线人为默认不进行改变，但是实际上可以修改
+
+```
+_age='24'
+```
+
+- 使用symbol，在类及其子类可以使用
+
+```js
+let Host=new Symbol();
+class User{
+   [Host]='34'
+   constructor(url){
+        this.url=url
+   }
+}
+
+let user1=new User('lisi')
+console.log(user1[Host])  //报错，symbol每次都是唯一的
+```
+
+- 使用weakMap(),用当前对象作为key，所以外界无法获取到
+
+```js
+let Host=new WeakMap();
+class User{
+   constructor(url){
+        this.url=url;
+        Host.set(this,'54')
+
+   }
+}
+
+let user1=new User('lisi')
+console.log(user1)  //User{url: "lisi"}
+```
+
+- Private私有属性完全属于某一个类，子类也无法使用
+
+```js
+加#号
+
+#host='llll'
+
+私有方法
+#getname=()=>{}
+```
+
+# 4.新数据结构
+
+## (1)symbol
+
+它的功能类似于一种标识唯一性的ID
+
+### 定义方式
 
 - 第一种定义方式
 
-```
+```js
 let s1=Symbol('name')
 let s2=Symbol('age')
 console.log(typeof s1) //symbol
@@ -195,16 +325,16 @@ console.log(s1===s2) //false
 
 - 第二种定义方式
 
-```
+```js
 let s1=Symbol.for('name')
 let s2=Symbol.for('name')
 console.log(s1.description) //name
 console.log(s1===s2) //true
 ```
 
-- Symbol类型可以作为object的key值，但是Object.keys,values,JSON.stringify无法获取到它的值，需要使用新增的API,可以用于类内部属性
+- Symbol类型可以作为object的key值，但是Object.keys、values、JSON.stringify无法获取到它的值，需要使用新增的API获取Symbol属性的值
 
-```
+```js
 // 使用Object.keys()无法获取Symbol类型
 //只使用Object.getOwnPropertySymbols()只能获取Symbol属性的值
 let key of Object.getOwnPropertySymbols(hd)
@@ -214,11 +344,11 @@ let key of Reflect.ownkeys(hd)
 
 - 不能为Symbol设置key，它本质上接近字符串
 
-#### 使用场景
+### 使用场景
 
 - 字符串耦合
 
-```
+```js
 //被覆盖
 let user1="李四";
 let user2="李四";
@@ -243,15 +373,7 @@ console.log(obj) //Symbol(): "40" Symbol(): "50"
 console.log(obj[user1.key]) //40
 ```
 
-解决可能重复的情况
-
-
-
-
-
-# 新的数据结构
-
-## Set()不可重复类型
+## (2)Set()不可重复类型
 
 不能去重引用类型，只能去重基本类型
 
@@ -371,12 +493,9 @@ console.log(obj)
 ### 类型转换
 
 - Array.from()
-
 - [...]
 
-*********
-
-## 2.WeakSet()
+## (3)WeakSet()
 
 - WeakSet的成员只能是对象,Set的成员不仅可以是对象还可以是其他类型的值。
 - 成员都是弱引用，垃圾回收机制不考虑WeakSet结构对此成员的引用,其他对象不再引用成员时，垃圾回收机制会自动回收此成员所占用的内存，不考虑此成员是否还存在于WeakSet结构中
@@ -396,9 +515,7 @@ console.log(newweakset) //[[Entries]] 0:value: {hello: "hi"}__proto__: WeakSet
 console.log(newweakset.has(hd)) //false
 ```
 
-*******
-
-## 3.Map类型
+## (4)Map类型
 
 键值对，键可以是对象
 
@@ -409,6 +526,7 @@ const objkey = {p1: 'v1'}
 map1.set(objkey, 'hello')
 console.log(map1.get(objkey)) //hello
 ```
+
 + 可以接收数组作为参数，与Set相同，需要外边[]包裹
 
 ```js
@@ -417,18 +535,18 @@ const map2 = new Map([
   ['age', 12]
 ])
 ```
+
 + map.size获取大小长度
 + 可以用set设置键值对且支持链式调用
 
 ```js
 map4.set('k2', 2).set('k3', 4).set('k4', 5)
 ```
+
 + map.has('k1')判断指定的键是否存在，delete删除，clear清空
 + map1.keys,values,entries
 
-*****
-
-## 4.Set、Map、WeakSet 和 WeakMap 的区别
+## (5)Set、Map、WeakSet 和 WeakMap 的区别
 
     Set
         成员唯一、无序且不重复
@@ -445,6 +563,10 @@ map4.set('k2', 2).set('k3', 4).set('k4', 5)
         只接受对象作为键名（null除外），不接受其他类型的值作为键名
         键名是弱引用，键值可以是任意的，键名所指向的对象可以被垃圾回收，此时键名是无效的
         不能遍历，方法有get、set、has、delete， 不能使用clear
+
+
+
+
 
 # 函数
 ## rest参数

@@ -121,9 +121,13 @@ window.addEventListener("onorientationchange" in window ? "orientationchange" : 
 
 rpx
 
-## vh,vw
+## Vh,vw,px,%,em,rem
 
-vw 100vw 等于 视口的宽度 vh 100vh 等于 视口的高度 vMax vw 和 vh 中的较大的那个 vMin vw 和 vh 中的较小的那个
++ px是绝对单位
++ %是相对于父元素的宽度比例，可以用来做元素垂直居中
++ <font color="red">em是相对于当前元素的font-size，如果父元素设置了font-size, 并且当前元素继承了父元素的font-size, 这时候em才是相对于父元素的font-size</font>
++ rem是相对于根节点的font-size, 可以通过媒体查询进行响应式配置（@media only screen and (max-width:375px){xxx样式}）
++ vw 100vw 等于视口的宽度 ，vh 100vh 等于 视口的高度，vMax vw 和 vh 中的较大的那个， vMin vw 和 vh 中的较小的那个
 
 ## 响应式布局
 
@@ -397,11 +401,32 @@ rgba()只是单纯的可以设置颜色透明度，比如：让背景出现透�
 如果利用 animation 动画，对 opacity 做变化（animation会默认触发GPU加速），则只会触发 GPU 层面的 composite，不会触发重绘。
 ```
 
-# 选择器
+# 层叠规则
 
-## 样式优先级计算
-最基本的：!important(无限大)>内联(1000)>ID选择器(100)>class选择符(10)>标签选择(1)
-加分项：属性选择器或伪类（10）、伪元素（1），通配选择器*（0）等等。
+样式可能受到多个样式的影响， 层叠规则用于解决样式冲突，确定优先级，获知最终的样式： 
+
+## 优先级
+
+作者样式表（也就是开发自己写的）的!important > 浏览器默认的!important > 作者样式表 > 默认样式表
+
+优先级低的不会起作用
+
+## 同一优先级比较
+
+也就是权重比较
+
+```
+(a,b,c,d)
++ a: style样式为1， 否则为0
++ b: 有多少个ID选择器
++ c: 类选择器、属性选择器、伪类选择器有多少个
++ d: 多少个元素选择器和伪元素选择器
+vscode有提示，然后进行从高位到低位的比较
+```
+
+## 优先级与同级完全一致比较
+
+按照样式在源代码出现的顺序决定， 靠后的覆盖靠前的
 
 ## 伪类与伪元素
 伪类选择器

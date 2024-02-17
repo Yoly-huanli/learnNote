@@ -2,7 +2,9 @@
 
 # 介绍
 
-ts和flow的却别
+ts和flow的区别
+
+https://zhuanlan.zhihu.com/p/598165548  state of js全威js数据统计
 
 ## 1.什么是ts
 
@@ -89,17 +91,20 @@ undefined | null | boolean | number | bigint | string | symbol | void | object |
 
 ### 1.undefined，null
 
-这两个类型都只有一个值，而且值的名称和类型的名称相同
+```tsx
+cosnt testunde: undefined = undefined
+cosnt testnull: null = null
+const testnum:number = undefined  可以
+```
 
-+ 默认情况下`null`和`undefined`是所有类型的子类型。 就是说你可以把 `null`和`undefined`赋值给`number`类型的变量。
-
++ 默认情况下`null`和`undefined`是所有类型的子类型。 就是说可以把 `null`和`undefined`赋值给`number`类型的变量。
 + 然而，在`tonfig.json`文件中`--strictNullChecks`设置为 true 标记（默认是 false），`null`和`undefined`只能赋值给`void`和它们各自
 
 ### 2.boolean
 
 只有true和false
 
-```
+```tsx
 let isDone: boolean = false;
 ```
 
@@ -107,7 +112,7 @@ let isDone: boolean = false;
 
 和JavaScript一样，TypeScript里的所有数字都是浮点数。 这些浮点数的类型是 `number`。 除了支持十进制和十六进制字面量，TypeScript还支持ECMAScript 2015中引入的二进制和八进制字面量。
 
-```
+```tsx
 let decLiteral: number = 6;
 let hexLiteral: number = 0xf00d;
 let binaryLiteral: number = 0b1010;
@@ -116,7 +121,7 @@ let octalLiteral: number = 0o744;
 
 使用 `BigInt` 可以安全地存储和操作大整数
 
-```
+```tsx
 let res: BigInt = BigInt(Number.MAX_SAFE_INTEGER)
 ```
 
@@ -124,7 +129,7 @@ let res: BigInt = BigInt(Number.MAX_SAFE_INTEGER)
 
 和js的string基本一致，可以是普通字符串，也可以是模板字符串
 
-```
+```tsx
 let name: string = `Gene`;
 let sentence: string = `Hello, my name is ${ name }.
 ```
@@ -133,20 +138,17 @@ let sentence: string = `Hello, my name is ${ name }.
 
 是es6支持的新的原始类型，如果要使用必须添加es6的编译库
 
-```
+```tsx
 let only: Symbol = Symbol(18)
 ```
 
-symbol 是一种特殊的类型。初级使用建议先不了解。
 其中还有一个特殊的语法 [unique symbol](https://link.zhihu.com/?target=https%3A//www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html)
 
 ### 6.void
 
-对变量赋值为 void 类型用途不大，这时候只相当于 undefined 类型的别名
++ 声明一个`void`类型的变量没有什么大用，因为只能为它赋undefined`和`null`：
 
-void 一般用于函数的返回值声明
-
-声明一个`void`类型的变量没有什么大用，因为你只能为它赋予`undefined`和`null`：
++ void 一般用于函数的返回值声明
 
 ### 7.字面量（Literal Type）
 
@@ -162,14 +164,13 @@ void 一般用于函数的返回值声明
 const a : false = false
 const b: 2333 = 2333
 const c : 0x1919n = 6425n
-const d : 'hello' = 'hello'
 const foo: 'foo' = 'foobar' 
 // Type '"foobar"' is not assignable to type '"foo"'.
 ```
 
 ### 8.枚举
 
-使用枚举类型可以为一组数值赋予友好的名字,枚举类型提供的一个便利是你可以由枚举的值得到它的名字
+双向绑定的过程，可以通过枚举的属性来访问枚举成员，和枚举的名字来访问枚举类型
 
 #### 数字枚举
 
@@ -180,13 +181,13 @@ enum Direction {
     Left,
     Right,
 }
+console.log(Direction.Up) //1
+console.log(Direction[1]) //Up
 ```
 
-`Up`使用初始化为 `1`。 其余的成员会从 `1`开始自动增长。 换句话说， `Direction.Up`的值为 `1`， `Down`为 `2`， `Left`为 `3`， `Right`为 `4`。
+`Up`使用初始化为 `1`。 其余的成员会从 `1`开始自动增长。  `Direction.Up`的值为 `1`， `Down`为 `2`， `Left`为 `3`， `Right`为 `4`。
 
 如果没有初始化，会从0开始
-
-通过枚举的属性来访问枚举成员，和枚举的名字来访问枚举类型
 
 #### 计算枚举
 
@@ -259,7 +260,7 @@ type strUnion =  keyof typeof str; // 'A' | 'B' | 'C'
 
 ### 1.Object
 
-在t s中，使用接口来定义对象的类型，对象相对于接口参数多了或者少了都会报错，但是
+在ts中，使用接口interface来定义对象的类型，对象相对于接口参数多了或者少了都会报错，但是
 
 ```tsx
 interface Person {
@@ -275,7 +276,7 @@ let tom: Person = {
 
 #### 可选属性
 
-```
+```tsx
 interface SquareConfig {
   color?: string;
   width?: number;
@@ -286,7 +287,9 @@ interface SquareConfig {
 
 #### 只读属性
 
-```
+只有第一次的时候才能赋值
+
+```tsx
 interface Point {
     readonly x: number;
     readonly y: number;
@@ -301,7 +304,7 @@ const可以防止变量的值被修改，readonly可以防止变量的属性被�
 
 表示的是`SquareConfig`可以有任意数量的属性，并且只要它们不是`color`和`width`，那么就无所谓它们的类型是什么。
 
-```
+```tsx
 interface SquareConfig {
     color?: string;
     width?: number;
@@ -335,8 +338,6 @@ let list: number[] = [1, 2, 3];
 let list: Array<number> = [1, 2, 3];
 ```
 
-<font color="red">数组泛型是什么？</font>
-
 ### 3.tuple元组 
 
 元组类型允许表示一个<font color="red">已知元素数量和类型的数组，</font>各元素的类型不必相同。
@@ -356,16 +357,8 @@ console.log(x[1].substr(1));
 
 当访问一个越界的元素，会使用联合类型替代：
 
-越界的元素能不能访问，会不会报错
-
 ```
 x[3] = 'world'; // OK, 字符串可以赋值给(string | number)类型
-```
-
-通过泛型获取
-
-```
-[K in T[number]]: K
 ```
 
 #### 获取元组长度
@@ -393,11 +386,6 @@ T['length']
       }
   }, 2] as const;
   ```
-
-  
-
-
-
 
 
 ### 4.函数
@@ -511,9 +499,9 @@ let b : bigint = a;
 
 ## any
 
-有时候，我们会想要为那些在编程阶段还不清楚类型的变量指定一个类型。 这些值可能来自于动态的内容，比如来自用户输入或第三方代码库。 这种情况下，我们不希望类型检查器对这些值进行检查而是直接让它们通过编译阶段的检查。 那么我们可以使用 `any`类型来标记这些变量：
+可以是任意类型：
 
-```
+```tsx
 let notSure: any = 4;
 notSure = "maybe a string instead";
 ```
@@ -537,10 +525,9 @@ notSure = "maybe a string instead";
 ```tsx
 
 function getLength(something: string | number): number {
-   return something.length;
+  return something.length;
+  // 报错：string | number不存在length属性
 }
-// index.ts(2,22): error TS2339: Property 'length' does not exist on type >'string | number'.
-//   Property 'length' does not exist on type 'number'.
 
 function getString(something: string | number): string {
    return something.toString();
@@ -568,12 +555,6 @@ function getString(something: string | number): string {
 
 - 同名属性兼容: 兼容的同名属性 合并后会是两者类型的子类型 (同 type name = string & '2' // '2' 类型 )
 - 同名属性不兼容: 不兼容的合并后会得到 never类型 (同 type name = string & number //never类型)
-
-这里的意思是
-
-联合类型，string | number 表示就是string或者number, 如果是接口，就是反而取交集
-
-交叉类型，string & number表示取string 并且number，得到的是never类型，如果是接口，就是取并集？
 
 ## 类类型
 
@@ -644,7 +625,6 @@ interface Square extends Shape, PenStroke {
 
 + extends返回位置
 
-  
 
 ```tsx
 // 解读: 如果泛型变量T是 () => infer R的`子集`，那么返回 通过infer获取到的函数返回值，否则返回boolean类型
@@ -665,6 +645,8 @@ let obj4: Obj<{a: number, b: () => void}>; // => number | () => void
  `private`: 被此限定符修饰的成员是只可以被类的内部访问；
  `protected`: 被此限定符修饰的成员是只可以被类的内部以及类的子类访问;
  `readonly`: 关键字将属性设置为只读的。 只读属性必须在声明时或构造函数里被初始化。
+
+Static 静态方法：直接在类上的方法或者变量，不是实例化之后才有的方法和变量
 
 # 类型断言
 
@@ -833,7 +815,7 @@ interface ILength {
 }
 
 function printLength<T extends ILength>(arg: T): T {
-    console.log(arg.length)
+    console.log(arg.length) //不会报错
     return arg
 }
 ```

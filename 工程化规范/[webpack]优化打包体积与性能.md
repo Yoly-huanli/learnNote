@@ -6,12 +6,19 @@
 
 启动项目时， 可能会存在下载的文件过大（2M以上），从而影响页面加载时长的情况
 
+大文件的缓存利用率低， 改动了文件缓存会失效
+
 ## 2.目标
 
 + 减少 http 请求次数，避免单个文件过大影响页面的响应速度 (拆包时尽量实现文件个数更少、单个文件体积更小)
 + 把更新频率低的代码和内容频繁变动的代码分离，把共用率较高的资源也拆出来，最大限度利用浏览器缓存
 
 ## 3.方案
+
+问题分析：
+
++ node_modules大文件里有业务代码
++ node_modules大文件
 
 https://webpack.docschina.org/guides/code-splitting/
 
@@ -37,7 +44,7 @@ module.exports = {
 - 多入口 之间包含一些重复的模块，那么这些重复模块都会被引入到打包文件中
 - 这种方法不够灵活，并且不能动态地拆分应用程序逻辑中的核心代码
 
-### ()动态导入:import()
+### (2)动态导入:import()
 
 通过模块的内联函数([import()](https://webpack.docschina.org/api/module-methods/#import-1))调用分离代码
 
@@ -81,7 +88,7 @@ module.exports = {
 
 - 多入口 之间包含一些重复的模块，那么这些重复模块都会被引入到打包文件中
 
-### (2)防止重复:[`SplitChunksPlugin`](https://webpack.docschina.org/plugins/split-chunks-plugin) 
+### ()防止重复:[`SplitChunksPlugin`](https://webpack.docschina.org/plugins/split-chunks-plugin) 
 
 使用[`SplitChunksPlugin`](https://webpack.docschina.org/plugins/split-chunks-plugin) 去重和分离 chunk
 
@@ -141,4 +148,36 @@ module.exports = {
 
 [优化方法]
 
-可以改变包的拆分方式， 比如把拆分由按照异步组件拆分，改为入口处全部文件拆分， 比如可以改变包拆分的规则和优先级
+- 聚合逻辑
+
+  - 入口、异步拆分
+
+  - 入口、异步之间的公共文件
+
+  - 入口、异步同层文件拆分
+
+    - 不是重复依赖：第三方依赖 独立拆分
+
+      ![image-20240108152248142](../img/image-20240108152248142.png)
+
+    - 是重复依赖：第三方依赖交集 独立聚合
+
+      ![image-20240108152431609](../img/image-20240108152431609.png)
+
+- 大文件拆成小文件
+
+![image2023-12-2_15-40-37](../img/image2023-12-2_15-40-37.png)
+
+# 依赖包管理
+
+- **减少重复依赖（npm）**
+
+使用npm ls分析依赖关系, npm dedupe 重复依赖合并,npm install的时候会自动执行，项目中尽量使用兼容版本号。
+
+- **减少打包的依赖体积（webpack）** 
+
+配置external，第三方库通过CDN的形式引入
+
+尽量使用es模式的库。eg:lodash-es
+
+使用按需引入的方式导入，而不是全部导入

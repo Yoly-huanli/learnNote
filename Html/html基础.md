@@ -1,0 +1,113 @@
+[toc]
+
+# SVG
+
+```html
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150">
+   <!-- 在这里添加SVG图形元素 -->
+</svg>
+```
+
+ SVG是一种基于XML的矢量图形格式，用于描述二维图形
+
++ 可以使用CSS样式表和JavaScript来控制图形
++ SVG图形中的元素可以响应事件，使其适用于交互性的图形。
++ 图形在不同分辨率的屏幕上都能保持清晰
+
+# canvas元素
+
+Canvas 元素是 HTML5 提供的一个用于绘图的标签，它有一个相关的 2D 绘图上下文，通过这个上下文对象，我们可以在 Canvas 上进行各种图形、文本和图像的绘制。
+
+```js
+var canvas = document.getElementById('myCanvas');
+var context = canvas.getContext('2d');
+
+// 将图像绘制到 Canvas 上。
+context.drawImage(image, dx, dy);
+// 填充矩形。
+context.fillRect(x, y, width, height);
+// 在 Canvas 上绘制文本。
+context.fillText(text, x, y);
+// 填充路径
+context.fill();
+```
+
+## **图片转换为 Canvas**
+
+```JS
+var image = document.getElementById('sourceImage');
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
+
+// 当图片加载完成后执行转换操作
+image.onload = function() {
+  // 将图片绘制到 canvas 上
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+};
+```
+
+## **Canvas 转换为图片**
+
+```js
+function canvasToImage() {
+    // 获取 canvas 元素和上下文
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    // 创建新的图片对象
+    var image = new Image();
+
+    // 将 canvas 上的内容绘制到新的图片对象上
+    image.src = canvas.toDataURL('image/png');
+
+    // 创建一个新的窗口显示生成的图片
+    var newWindow = window.open();
+    newWindow.document.write('<img src="' + image.src + '" alt="Converted Image">');
+  }
+```
+
+# 图片
+
+## 图片格式
+
++ JPEG
+
+  ```
+  特点： 无损压缩，适用于照片和图像。
+  优势： 文件相对较小，保留较好的图像质量。
+  不足： 不支持透明度。
+  ```
+
++ **PNG**
+
+  ```
+  特点： 无损压缩，支持透明度。
+  优势： 适用于图标、图形和需要透明背景的图像。
+  不足： 文件相对较大，不适合存储照片。
+  ```
+
++ GIF
+
+  ```
+  特点： 无损压缩，支持透明度，支持简单动画。
+  优势： 适用于简单的动画和图形。
+  不足： 色彩表受限，不适用于存储照片。
+  ```
+
++ WebP
+
+  ```
+  特点： 有损和无损压缩，支持透明度，提供更小的文件大小。
+  优势： 通常比 JPEG 和 PNG 文件更小，保持相对较好的图像质量。
+  不足： 在一些老旧的浏览器中支持较差。
+  ```
+
++ SVG
+
+  ```
+  特点： 矢量图形格式，可无限缩放而不失真。
+  优势： 适用于图标、图形，支持交互和动画。
+  不足： 不适用于存储复杂的位图图像。
+  ```
+
+  

@@ -90,11 +90,12 @@ MVVM 与 MVC 最大的区别就是：它实现了 View 和 Model 的自动同步
 ## (5)vue和react有什么异同
 
 + Vue 的表单可以使用 v-model支持双向绑定，相比于 React 来说开发上更加方便，当然了 v-model 其实就是个语法糖，本质上和 React 写表单 的方式没什么区别。
-
 + 改变数据方式不同，Vue 修改状态相比来说要简单许多，React 需要使用 setState 来改变状态
 + React 16以后，有些钩子函数会执行多次，这是因为引入 Fiber 的原因
 +  React 需要使用 JSX，有一定的上手成本，但是完全可以通过 JS 来控制页面，更加的灵活。Vue 使用了模板语法，相比于 JSX 来说没有那么灵活，但是完全可以脱离工具链，通过直接编写 render 函数就能在浏览器中运行。 在生态上来说，两者其实没多大的差距，当然 React 的用户是远远高于 Vue 的。
 + 在上手成本上来说，Vue 一开始的定位就是尽可能的降低前端开发的门槛，然而 React 更多的是去改变用户去接受它的概念和思想，相较于 Vue 来说上手成本略高。
+
+
 
 ## (6)虚拟 DOM 
 
@@ -381,11 +382,188 @@ methodsToPatch.forEach((method) => {
 
 Vue3.x 改用 Proxy 替代 Object.defineProperty。因为 Proxy 可以直接监听对象和数组的变化，并且有多达 13 种拦截方法
 
+### Object.defineProperty
+
+数据劫持是Object.defineProperty,在MDN中的定义
+
+> `Object.defineProperty()`方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象。
+>
+> 它的语法是传入三个参数：
+>
+> Object.defineProperty(obj, prop, descriptor)
+>
+> - obj：要定义属性的对象。
+> - prop：要定义或修改的属性的名称或 Symbol 。
+> - descriptor：要定义或修改的属性描述符。
+>
+> 第三个参数可以取值
+>
+> + configurable：用来描述属性是否可配置（改变和删除），为true才可以被修改和删除,不设置时默认值为false
+> + enumerable：用来描述属性是否能出现在`for in`或者`Object.keys()`的遍历中,不设置时默认值为false
+> + writable：用来描述属性的值是否可以被重写，值为false时属性只能读取,不设置时默认值为false
+> + value：属性的值
+> + get：属性的getter函数，当访问该属性时，会调用此函数,不设置时，默认值为undefined。
+> + set：当属性值被修改时，会调用此函数。该方法接受一个参数，会传入赋值时的 this 对象,不设置时，默认值为undefined.
+
+```js
+var user = {};
+
+var initName = ''
+Object.defineProperty(user, "name", {
+    get: function(){
+        console.log('get name')
+        return initName
+    },
+    set: function(val){
+        console.log('set name')
+        initName = val
+    }
+});
+// get name
+console.log(user.name)
+// set name
+user.name = 'new'
+
+```
+
+#### 劫持数组
+
+可以把数组的索引看成是属性进行劫持
+
+```js
+var list = [1,2,3]
+
+list.map((elem, index) => {
+    Object.defineProperty(list, index, {
+        get: function () {
+            console.log("get index:" + index);
+            return elem;
+        },
+        set: function (val) {
+            console.log("set index:" + index);
+            elem = val;
+        }
+    });
+});
+
+// set index:2
+list[2] = 6
+// get index:1
+console.log(list[1])
+```
+
+如果要对数组新增元素push方法，那么就是新增的元素并不会触发监听事件，为此，Vue的解决方案是劫持`Array.property`原型链上的7个函数，我们通过下面的函数简单进行劫持：
+
+```js
+const arrayProto = Array.prototype
+export const arrayMethods = Object.create(arrayProto)
+
+/**
+ * Intercept mutating methods and emit events
+ */
+;[
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'reverse'
+]
+.forEach(function (method) {
+  // cache original method
+  const original = arrayProto[method]
+  def(arrayMethods, method, function mutator (...args) {
+    const result = original.apply(this, args)
+    const ob = this.__ob__
+    let inserted
+    switch (method) {
+      case 'push':
+      case 'unshift':
+        inserted = args
+        break
+      case 'splice':
+        inserted = args.slice(2)
+        break
+    }
+    if (inserted) ob.observeArray(inserted)
+    // notify change
+    ob.dep.notify()
+    return result
+  })
+})
+
+在Array.__proto__上 进行了方法重写或者添加
+并且对添加属性的方法如push，unshift，splice所添加进来的新属性进行手动观察， if (inserted) ob.observeArray(inserted)
+```
+
+另外，由于 JavaScript 的限制， Vue 不能检测以下变动的数组：
+
+> 当你利用索引直接设置一个项时，例如： vm.items[indexOfItem] = newValue
+> 当你修改数组的长度时，例如： vm.items.length = newLength
+
+#### 缺陷
+
++ 虽然`Object.defineProperty`能够劫持对象的属性，但是需要对对象的每一个属性进行遍历劫持；
++ 如果对象上有新增的属性，则需要对新增的属性再次进行劫持，这也是为什么Vue给对象新增属性需要通过`$set`的原因，其原理也是通过`Object.defineProperty`对新增的属性再次进行劫持。
++ 如果属性是对象，还需要深度遍历。
++ 无法检测数组元素的变化，需要进行数组方法的重写
++ 无法检测数组的长度的修改
++ defineProperty 会污染原对象，修改时是修改原对象
+
+### Proxy
+
+相较于Object.defineProperty劫持某个属性，Proxy则更彻底，不在局限某个属性，而是直接对整个对象进行代理
+
+```js
+var target = {}
+
+var proxyObj = new Proxy(
+    target,
+    {
+        get: function (target, propKey, receiver) {
+            console.log(`getting ${propKey}!`);
+            return Reflect.get(target, propKey, receiver);
+        },
+        set: function (target, propKey, value, receiver) {
+            console.log(`setting ${propKey}!`);
+            return Reflect.set(target, propKey, value, receiver);
+        },
+        deleteProperty: function (target, propKey) {
+            console.log(`delete ${propKey}!`);
+            delete target[propKey];
+            return true;
+        }
+    }
+);
+//setting count!
+proxyObj.count = 1;
+//getting count!
+//1
+console.log(proxyObj.count)
+//delete count!
+delete proxyObj.count
+
+```
+
+Proxy直接代理了`target`整个对象,不仅能够监听到属性的增加，还能监听属性的删除,不管是数组下标或者数组长度的变化，还是通过函数调用，Proxy都能很好的监听到变化.
+
+#### 优化结果
+
+![image-20220510114624736](../img/image-20220510114624736.png)
+
+整体上，比`Vue 2.x` 内存占用少一半以上，总体速度快一倍以上。
+
++ 相比vue 2有1.3到2倍的性能优势。
++ 服务器渲染也完全重写，从模板编译到服务器渲染生成完全不同的渲染函数，可以比vue 2快2~3倍。
+
+
+
 ## reactive响应式
 
 例子:
 
-```vue
+```js
  setup() {
     let a = reactive({
       age: 1,
@@ -586,7 +764,7 @@ Vue.component('currency-input', {
 })
 ```
 
-# .组件生命周期
+# 4.组件生命周期
 
 + **beforeCreate** 
 
@@ -631,7 +809,13 @@ Vue.component('currency-input', {
 - 能更快获取到服务端数据，减少页面  loading 时间；
 - ssr  不支持 beforeMount 、mounted 钩子函数，所以放在 created 中有助于一致性；
 
-# .组件通信
+## vue3的生命周期
+
+<img src="../img/image-20220420210136637-6607215.png" alt="image-20220420210136637" style="zoom:50%;" />
+
+
+
+# 5.组件通信
 
 ## （1）父子通信，props & emit
 
@@ -1085,7 +1269,7 @@ export default defineComponent({
 </WeekScheduleContent>
 ```
 
-# 6.路由
+# 6.vue-router路由
 
 ## 路由模式实现原理
 
@@ -1125,6 +1309,27 @@ window.addEventListener("hashchange", funcRef, false);
 
 路由钩子的执行流程, 钩子函数种类有:全局守卫、路由守卫、组件守卫
 
+```js
+全局守卫
+	beforeEach: 在路由变化前被调用。
+	beforeResolve: 在 beforeEach 后被调用，解析完异步组件。
+	afterEach: 在路由变化后被调用。
+
+组件守卫
+  beforeRouteEnter: 在路由进入前被调用。
+  beforeRouteUpdate: 在当前路由改变，但是该组件被复用时调用。
+  beforeRouteLeave: 在离开当前路由时被调用。
+	
+路由守卫
+  beforeEnter: 在路由配置中使用。
+  beforeRouteEnter: 在路由进入前被调用。
+  beforeRouteUpdate: 在当前路由改变，但是该组件被复用时调用。
+  beforeRouteLeave: 在离开当前路由时被调用。
+
+```
+
+
+
 **完整的导航解析流程:**
 
 + 导航被触发
@@ -1140,7 +1345,20 @@ window.addEventListener("hashchange", funcRef, false);
 + 触发 DOM 更新。
 + 调用 beforeRouteEnter 守卫中传给 next 的回调函数，创建好的组件实例会作为回调函数的参数传入。
 
-# .keep-alive组件的用法
+## 路由懒加载
+
+路由懒加载是一种优化手段，它可以延迟加载页面组件，从而减小初始页面加载时的文件体积，提升网页性能。
+
+### 实现原理
+
++ **动态 import()：** 在 JavaScript 中，`import()` 是动态模块导入的语法，它返回一个 Promise 对象。通过使用 `import()`，可以在运行时动态加载模块。
++ **分割代码块（Chunk）：** 当使用 `import()` 导入模块时，打包工具（例如 Webpack）会将导入的模块单独打包成一个文件，形成一个独立的代码块（Chunk）。
++ **懒加载触发时机：** 路由懒加载通常与路由配置结合使用。当用户访问某个懒加载路由时，相关的 JavaScript chunk文件才会被下载。
++ **异步加载：** 浏览器会在空闲时异步下载这个文件，而不会阻塞其他页面的加载。
+
+
+
+# 7.keep-alive组件的用法
 
 https://www.jianshu.com/p/480c52580c8a
 
@@ -1344,7 +1562,314 @@ function matches (pattern, name){
   }
 ```
 
+# 8.vue3 VS vue2
 
+## vue2升vue3的动机
+
++ 更小：移除不常用api，引入tree shaking,打包体积更小
++ 更快：性能提升：diff算法优化，静态提升，事件监听缓存，ssr优化
++ 更友好：兼顾vue2的options API的同时，推出了composition API，增加了代码维护和组织能力
++ 提高自身可维护性：源码通过monorepo维护的，根据功能把不同的模块拆分到package目录下不同子目录下，模块拆分更明确，模块之间的依赖关系也更明确，而且比如响应式库reactive可以单独引入而不需要引入整个vue库
++ 开放更多底层功能，便于社区的二次开发
++ 进行了一些优化：体积优化，编译优化，数据劫持优化
+
+## (1)性能提升
+
+### 体积优化
+
+源码体积变小，与Vue2相比较，Vue3整体体积变小了
+
++ 移除了一些比较冷门的feature：如 keyCode 支持作为 v-on 的修饰符、on、off 和 $once 实例方法、filter过滤、内联模板等。
++ 在 vue2 中，很多函数都挂载到全局 Vue 对象上，如：nextTick、set 函数等，虽然我们不常用，但打包时只要引入 Vue 这些全局函数会打包进 bundle 中。而 vue3 中，引入tree-shaking，所有的 API 都通过 ES6 模块化的方式引入，这样就能够让 webpack 或 rollup 等打包工具在打包时，就会自动对没有用到的 API 进行剔除，最小化 bundle 体积。
+
+### 编译优化
+
+#### 静态标记（PatchFlag）
+
++ Vue2 中的虚拟dom是进行全量的对比（实际上有的节点是静态的，比如固定的文字，不需要进行对比更新的）
++ Vue3 新增了静态标记（PatchFlag），只比对带有 PF 的节点（在编译阶段进行分析，判断出节点是动态的还是静态的），并且通过 Flag 的信息得知 当前节点要比对的具体内容。如果是负数，不需要再对其子节点进行diff
+
+#### 静态提升
+
++ Vue2中无论元素是否参与更新, 每次都会重新创建, 然后再渲染
++ Vue3中对于不参与更新的元素, 会做静态提升, 只会被创建一次, 在渲染时直接复用即可
+
+![image-20220509164255707](../img/image-20220509164255707.png)
+
+#### cacheHandlers 事件侦听器缓存
+
++ 默认情况下onClick会被视为动绑定, 所以每次都会去追踪它的变
++ 但是因为是同一个函数，所以没有追踪变化, 直接缓存起来复用即可
+
+第一次渲染
+
+![image-20220509174715481](../img/image-20220509174715481.png)
+
+第二次渲染：会从缓存中读同一个函数，因为是同一个函数，也就没有追踪变化的必要，这样就会避免一些没必要的更新。
+
+![image-20220509174924205](../img/image-20220509174924205.png)
+
+#### ssr渲染
+
++ 当有大量静态的内容时候，这些内容会被当做纯字符串推进一个buffer里面，即使存在动态的绑定，会通过模板插值嵌入进去。这样会比通过虚拟dmo来渲染的快上很多很多。
++ 当静态内容大到一定量级时候，会用_createStaticVNode方法在客户端去生成一个static node， 这些静态node，会被直接innerHtml，就不需要创建对象，然后根据对象渲染。
+
+![image-20220509175238509](../img/image-20220509175238509.png)
+
+### 数据劫持优化
+
+Proxy 对象以及优化过的响应式系统, 详细见上述分析
+
+## (2)Composition API
+
+Composition API是一种基于函数的 API，可以更好地组织和复用组件逻辑。
+
++ vue2的复杂逻辑分散在data,method,computed等各个部分，不好维护，使用后可以把各个散落的代码整合在setup或者单独的js文件里再进行引入
++ vue2中已有的代码复用的方法，mixin,filters存在缺陷
++ vue2对ts的支持不充分
+
+### setup
+
+setup就是在vue3中要使用 composition api 的地方，在setup里组织我们的代码。在组件创建之前执行,也就是在method、computed等之前被调用(===>避免在setup中使用this),  setup提供以下几个函数：
+
+```js
+// 1.ref、reactive：定义响应式变量, 变量值要通过xx.value获取，在模版中访问不需要使用.value 进行访问
+
+// (1)ref
+import { defineComponent, ref } from "vue";
+...
+setup() {
+    let nameRef = ref("NIHAO"); // nameRef:{value:"NIHAO"}
+    setInterval(() => {
+      nameRef.value += 1;
+    }, 1000);
+    return {
+      name: nameRef,
+    };
+  },
+  
+// (2)reactive: 返回对象的响应式副本,reactive将解包所有深层的 refs，同时维持 ref 的响应性（引用类型）
+    
+import { defineComponent, reactive } from "vue";
+...
+setup() {
+    let nameReactive = reactive({
+      name: "nihao",
+    });
+    setInterval(() => {
+      nameReactive.name += 1;
+    }, 1000);
+    return {
+      nameReactive,
+    };
+  },
+...
+ <p>{{ nameReactive.name }}</p>
+
+// 2.toRefs：解构响应式对象数据
+// 3.watch、watchEffect：监听data变化
+// (1)watch: deep深度监听, immediate直接监听
+import { watch } from 'vue'
+export default {
+  setup (props) {
+    watch(age, (currentValue, preValue) => {
+      console.log(currentValue, preValue)
+    },{
+      deep:true,
+      immediate:true
+    })
+  }
+}
+// (2)watchEffect:立即执行传入的一个函数，同时响应式追踪其依赖，并在其依赖变更时重新运行该函数。
+watchEffect(() => {
+  getList(id.value)  
+})
+
+watch与watchEffect相比：
+
++ 两者都可以监听data属性的变化
++ watch需要明确监听的是哪个属性，可以访问被侦听状态的先前值和当前值
++ watchEffect 会根据其中的属性自动监听其变化，写了哪个就会监听哪个，没写就不监听watch是惰性执行：即回调仅在侦听源发生变化时被调用，除非设置了初始化监听；watchEffect在初始化时，一定会执行一次。
+
+// 4/computed：计算属性生命周期钩子, 返回一个不可变的响应式ref对象
+import { defineComponent, ref, computed } from "vue";
+...
+setup() {
+    let nameRef = ref("NIHAO");
+    setInterval(() => {
+      nameRef.value += 1;
+    }, 1000);
+    let nameRef2 = computed(() => {
+      return nameRef.value + 2;
+    });
+    return {
+      name: nameRef,
+      name2: nameRef2,
+    };
+  },
+```
+
+### props、context
+
+第一个参数：props是一个对象，包含父组件传递给子组件的所有数据setup函数中的props是响应式的，当传入新的prop时，它将被更新
+
+因为props是响应式的，不能使用ES6解构，因为它会消除prop的响应式。可以通过使用setup函数中的toRefs来安全的完成
+
+```js
+export default {
+  props: {
+    title: String
+  },
+  setup(props) {
+    console.log(props.title)
+  }
+}
+
+import { toRefs } from 'vue'
+setup(props) {
+	const { title } = toRefs(props)
+	console.log(title.value)
+}
+```
+
+第二个参数：context对象,暴露三个属性:
+
++ attrs等同于$attrs，获取在当前组件上定义的所有属性的对象。
++ 非响应式对象slots：等同于$slots，
++ 插槽emit：等同于$emit，触发事件 (事件分发,传递给父组件需要使用该事件)
+
+```js
+export default {
+  setup(props, context) 
+    // Attribute (获取当前标签上的所有属性的对象。非响应式对象)
+    console.log(context.attrs)
+    // 插槽 (非响应式对象)
+    console.log(context.slots)
+    // 触发事件 (emit事件分发,传递给父组件需要使用该事件。)
+    console.log(context.emit)
+  }
+}
+```
+
+context不是响应式的，所以可以直接解构使用
+
+```js
+export default {
+  setup(props, { attrs, slots, emit }) {
+    ...
+  }
+}
+```
+
+## (3)Teleport（传送门)
+
+用于将组件的内容渲染到 DOM 中的不同位置。希望逻辑上在当前位置，但是实际位置在DOM上的其他位置,  这在处理模态框等需要在组件外部渲染的情况下非常有用。它不受父级`style`、`v-show`等属性影响，但`data`、`prop`数据依旧能够共用。
+
+```vue
+<template>
+  <div>hello</div>
+  <teleport to="body">这里是teleport</teleport>
+</template>
+
+//编译后
+function render(_ctx, _cache) {
+  with (_ctx) {
+    const { createVNode, openBlock, createBlock, Teleport } = Vue
+    return (openBlock(), createBlock(Teleport, { to: "body" }, [
+      createVNode("div", null, " teleport to body ", -1 /* HOISTED */)
+    ]))
+  }
+}
+```
+
++ 如果设置:disabled 为true,则不会移动位置
++ 在同一目标上使用多个 teleport：挂载多个teleport，则是按顺序挂载
++ 如果 `<teleport>` 包含 Vue 组件，则它仍将是 `<teleport>` 父组件的逻辑子组件
+
+原理
+
+![image-20220526122501406](../img/image-20220526122501406-6186388.png)
+
+## (4)Fragments（碎片）
+
+Vue 3 支持 Fragments，允许组件返回多个根节点而无需包装额外的 HTML 元素, 不在dom树中出现。
+
++ 在vue2中，每个组件只能有一个根节点，如果有多个节点，必须外层使用一个div进行全部的包裹
++ vue 3.x中，vue template支持多个根节点,减少标签层级, 减小内存占用
+
+```vue
+<template>
+  <div>hello</div>
+  <div>hello2</div>
+</template>
+```
+
+## (5)Suspense
+
+场景：加载组件的时候，需要时间，那么我们希望在加载完成之前显示loading，加载完成后显示组件
+
+```vue
+<template>
+  <div v-if="loading">loading...</div>
+  <div v-else>...组件内容</div>
+</template>
+```
+
+自带两个 slot 分别为 default、fallback。当要加载的组件不满足状态时,Suspense 将处于 fallback状态一直到加载的组件满足条件，才会进行渲染。
+
+<Suspense>的出现让我们在vue中需要去处理异步的时候更加方便，**不需要自己手动控制全局的变量或者是一个isLoading的变量**。当#defaut内部有多个异步组件，则需要等待全部异步组件加载完成才进行显示，全部加载完成之前显示的是loading状态,  可以使用onErrorCapurted来配合处理加载错误的情况。
+
+```vue
+<div v-if="error">error</div>
+<Suspense v-else>
+    <template #default>
+    </template>
+    <template #fallback>
+      loading...
+    </template>
+ </Suspense>
+
+
+async setup() {
+    let res = await getUserInfo()
+    const error = ref(null);
+    onErrorCaptured(e => {
+      error.value = e;
+      return false;
+    });
+    return { res, error };
+  },
+```
+
+异步组件可以设置suspensible:false摆脱suspense的控制
+
+## (6)Custom Renderer API
+
++ Custom Renderer API 是什么？
+
+>自定义渲染器API,用于自定义render函数,其实就是createRenderer API
+
++ Custom Renderer API 的意义？
+
+> 跨平台，虚拟dom优点之一就是便于实现跨平台，只要使用不同的虚拟dom到真实dom的渲染过程，就可以实现一套代码，多个平台使用的目的，因此不再需要为了自定义一些功能而 fork Vue 的代码。这个特性给 Weex 和 NativeScript Vue 这样的项目提供了很多便利。
+
+## vue3渲染流程
+
+```js
+import { createApp } from "vue";
+import App from "./App.vue";
+console.log("APP", App);
+console.log("APP.render", App.render());
+createApp(App).mount("#app");
+```
+
+https://vue-next-template-explorer.netlify.app/#eyJzcmMiOiI8ZGl2PlxuICA8c3Bhbi8+XG4gIDxzcGFuPnt7IG1zZyB9fTwvc3Bhbj5cbjwvZGl2PiIsIm9wdGlvbnMiOnt9fQ==
+
+![image-20220509150616403](../img/image-20220509150616403.png)
+
+![image-20220509143318982](../img/image-20220509143318982.png)
+
+template-->render()-->vnode-->**渲染为真实的dom元素(createApp)**-->挂载到根节点上(mount)
 
 
 

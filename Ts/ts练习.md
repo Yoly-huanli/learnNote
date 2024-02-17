@@ -4,6 +4,39 @@
 
 https://github.com/type-challenges/type-challenges
 
+
+
+# 实战
+
+## 1.类型拓展
+
+ts实现一个类型，该类型必须拥有某个类型的所有属性，并对它进行拓展，使之可以添加任意类型的键和值
+
++ 使用交叉类型
+
+```tsx
+type ExtendType<T, U extends Record<string, any>> = T & U;
+
+// 用法示例
+interface Base {
+  id: number;
+  name: string;
+}
+
+const extendedObject: ExtendType<Base, { additionalKey: any }> = {
+  id: 1,
+  name: "Example",
+  additionalKey: "Some Value",
+};
+
+console.log(extendedObject);
+
+```
+
+
+
+# 练习题目
+
 ## 1.排除&挑选&融合
 
 ### (1)Pick
@@ -105,7 +138,7 @@ type Filter<T, U> = T extends U ? T : never; // 找出交集
 
 ### (3)实现内置的Omit<T, K>
 
-`Omit` 会创建一个省略 `K` 中字段的 `T` 对象
+`Omit` 会创建一个省略 `K` 中字段的 `T` 对象， 可以用于extend的时候有属性冲突的时候，这时候只继承其中一部分就可以了
 
 ```tsx
 interface Todo {
@@ -1460,6 +1493,18 @@ type Fibonacci<
   ? Prev['length']
   : Fibonacci<T, [...N, 1], Cur, [...Prev, ...Cur]>
 ```
+
+
+
+### (12)Partial
+
+统一把接口的属性都变味可选的，不是必填的
+
+
+
+
+
+
 
 
 

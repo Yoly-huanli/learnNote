@@ -1,196 +1,74 @@
 [toc]
 
-# iframe通信
+# 输入URL全过程
 
-+ 通过postMessage进行通信
-+ 发送消息是通过要发送的元素postMessage, window.iframe1.contentWindow.postMessage, window.parent.postMessage('world', '*')
-+ 接收消息是通过监听message事件
-+ postMessage有跨域限制
+## 用户在浏览器的地址栏输入URL并按下回车。
 
-![image-20220614104951504](../img/image-20220614104951504.png)
+用户在浏览器的地址栏输入URL， 标签页图标进入加载阶段
 
-代码如下
+## DNS解析URL对应的IP
 
-```html
-//a页面
-<body>
-  <p>
-    这里是父级页面a
-    <button id = "btn1">发送信息给b</button>
-  </p>
-  <iframe id="iframe1" src="./b.html"></iframe>
-</body>
-<script>
-  const btn = document.getElementById('btn1');
-  btn1.addEventListener('click',()=>{
-    console.log('父级页面a发送信息')
-    window.iframe1.contentWindow.postMessage('hello','*')
-    //第一个参数是内容，第二个参数可以限制发给哪些域，不是所有url都可以接收到这个消息
-  })
-  window.addEventListener('message', (e) => {
-    console.log('父级页面a接收信息')
-    console.log('origin', e.origin, e.data)
-    //e.origin可以判断发送过来消息的源，判断是否合法
-  })
-</script>
-```
+通过域名解析协议（DNS，Domain Name System）来将域名和 IP 地址相互映射
 
-```html
-//b页面
-<body>
-  <p>
-    这里是内嵌页面b
-    <button id="btn1">发送信息给a</button>
-  </p>
-</body>
-<script>
-  const btn = document.getElementById('btn1');
-    btn1.addEventListener('click', () => {
-      console.log('内嵌页面b发送信息')
-      window.parent.postMessage('world', '*')
-    })
-    window.addEventListener('message', (e) => {
-      console.log('内嵌页面b接收信息')
-      console.log('origin', e.origin, e.data)
-    })
-</script>
-```
+### DNS解析过程
 
-# 同源页面通信
++ 查找DNS缓存
 
-满足同源策略，同一原始域和用户代理下的所有窗口、iFrames等进行交互，属于同源通信。(比如两个同源的tab页面进行通信)
+  ```
+  + 浏览器缓存: 是否有解析记录
+  + 操作系统缓存
+  + 路由器缓存
+  + ISP 中是否有缓存： ISP 缓存就是本地通信服务商的本地域名服务器的缓存
+  ```
 
-### 1.BroadcastChannel
++  DNS 查询（没有缓存）
 
-使用的场景，如，用户同时依次打开某个网站的几个页面，然后在其中一个页面 A进行登录操作，那么其他的页面就可以通过 BroadcastChannel收到来自页面 A的登录状态，从而能够完成多个页面自动同步登录状态的目的。
+  ```
+  DNS 是分布式域名服务器，每台服务器只维护一部分 IP 地址到网络地址的映射，没有任何一台服务器能够维持全部的映射关系
+  逐级查询，举例来说，www.bilibili.com真正的域名是www.bilibili.com.root，简写为www.bilibili.com.。www是三级域名，bilibili是二级域名，com是顶级域名。 因为根域名.root对于所有域名都是一样的，所以平时是省略的。
+  
+  ```
 
-```js
-//发送页面
-const cast = new BroadcastChannel('mychannel')
-// data 可以是任何 JS数据类型
-const data = 'I\'m from Page A'
-// 广播信号
-cast.postMessage(data)
-```
+  
 
-```js
-//接收页面
-// B页面监听同源下所有页面发送出的“广播”
-//  BroadcastChannel的参数，即channel号必须与想要监听的广播源相同，这里是 mychannel
-const cast = new BroadcastChannel('mychannel')
-// 接收信号
-cast.onmessage = function (e) {
-  console.log(e.data) // => I'm from Page A
-}
-// 关闭连接
-cast.close()
-```
+## 根据IP建立TCP连接（三次握手）
 
-### 2.postMessage(支持跨域)
 
-### 3.Localstorage
 
-Chrome、Edge等浏览器下的这个 storage事件必须由其他同源页面触发
+## 浏览器查找当前URL是否存在缓存，决策是否进行http请求
 
-```js
-// A页面
-window.onstorage = function(e) {
-  console.log(e.newValue); // previous value at e.oldValue
-};
-// B页面
-localStorage.setItem('key', 'value');
-```
 
-注意：设置相同的localstorage只会在发生改变时触发
 
-```js
-localStorage.setItem('lily', '7');
-localStorage.setItem('lily', '7');
-```
+## HTTP发起请求&&服务器处理请求，浏览器接收HTTP响应
 
-接收到的e
 
-```js
-//主要通过e.newValue获取
-isTrusted: true, key: "lily", oldValue: "7", newValue: "8", url: "https://www.nowcoder.com/interview/ai/cover?jobTagId=644".....
-```
 
-### 4.SharedWorker
+## 浏览器收到HTTP响应,浏览器`解析渲染页面
 
-Web worker分为两种：专用线程 dedicated web worker、共享线程 shared web worker 专用线程随当前页面的关闭而结束；这意味着 专用线程只能被创建它的页面访问；与之相对应的 共享线程可以被多个页面访问（包括多个标签页和 iframe），不过这些页面**必须是同源的**，即 共享线程支持的是 同源通信
+- HTML解析： 构建dom树， 解析HTML过程中遇到图⽚、样式表、js⽂件，会启动下载
 
-```js
-// worker.js
-// 共享的数据
-let shareData = 0
-// 监听主线程的连接
-onconnect = function(e) {
-  const port = e.ports[0]
-  port.onmessage = function(e) {
-    if (e.data === 'get') {
-      // 向连接的主线程发送信号
-      port.postMessage(shareData)
-    } else {
-      // 将主线程发来的数据设置为 worder内的 共享数据
-      shareData = e.data
-    }
-  }
-}
-```
+- 样式计算：构建 CSSOM 树
 
-A页面设置 SharedWorker中的数据字段
+- 布局： 合并DOM树和CSS规则，生成render树
 
-```js
-<input type="text" id="textInput" />
-<input type="button" value="设置共享数据" />
+- 分层：
 
-<script>
-  const worker = new SharedWorker('worker.js')
-  const inputEle = document.querySelector('#textInput')
+  ```
+  + 构建图层树：在分层之前，浏览器会根据渲染树（Render Tree）和一些优化策略，将页面的部分内容划分为多个图层。每个图层包含一组相关的渲染对象
+  + 图层绘制：每个图层都会被单独绘制
+  + 图层合成：在所有图层都被绘制后，浏览器会将这些位图合成为最终的页面显示
+  + 分层优化：分层技术可以提高页面渲染性能和流畅度
+  ```
 
-  inputEle.onchange = () => {
-    console.log('Message posted to worker')
-    // 向 worker 发送数据信号
-    worker.port.postMessage(inputEle.value)
-  }
-</script>
-```
+- 生成绘制指令: 渲染主线程会为每个层单独产生绘制指令集，用于描述这一层的内容该如何画出来。
 
-B页面获取 SharedWorker中的数据字段
+- 分块: 合成线程首先对每个图层进行分块，将其划分为更多的小区域
 
-```js
-<div id="result"></div>
-<button id="btn">获取 SharedWorker中的共享数据</button>
-<script>
-  const worker = new SharedWorker('worker.js')
-  var result = document.querySelector('#result')
-  // 发送获取获取 SharedWorder 中共享数据的请求
-  document.getElementById('btn').addEventListener('click' , () => {
-    // 向 worker发送信号
-    worker.port.postMessage('get')
-  })
-  // 接收从 SharedWorder发送来的共享的数据
-  worker.port.onmessage = e => {
-    console.log('Message received from worker')
-    // 在页面上显示获取到的 worker共享数据
-    result.textContent = e.data
-  }
-</script>
-```
+- 光栅化: 将每个块变成位图。
 
-最终，在 A页面中设置的值，或被 B页面获取到， **像是存储**，一个页面在公共区域存了一个数据，另外一个页面想要了，需要主动发送get去获取，可能并不是适合于页面通信，当然了，SharedWorker本来就不是用于页面通信的，所以没有预期的效果也是情有可原的.
+- 绘制
 
-### 5.websocket
 
-要用到websocket的服务器，后端广播
-
-### 6.IndexDB(支持跨页面)
-
-IndexedDB 是一种低级 API，用于客户端**存储大量结构化数据**(包括 文件、blobs)，该API使用索引来实现对该数据的高性能搜索，区别于 LocalStorage只能存储字符串，IndexedDB可以存储 **JS所有的数据类型**，包括 null、undefined等，是 HTML5规范里新出现的 API IndexedDB 是一种使用浏览器存储大量数据的方法.它创造的数据可以被查询，并且**可以离线使用**。IndexedDB对于那些需要存储大量数据，或者是需要离线使用的程序是非常有效的解决方法
-
-```
-与 Shared Worker 方案类似，消息发送方将消息存至 IndexedDB 中；接收方（例如所有页面）则通过轮询去获取最新的信息。
-```
 
 
 
@@ -428,17 +306,27 @@ Service Worker 实现缓存功能一般分为三个步骤：首先需要先注�
 
 Expires 是 HTTP/1 的产物，**受限于本地时间**，如果修改了本地时间，可能会造成缓存失效。Expires: Wed, 22 Oct 2018 08:41:00 GMT表示资源会在 Wed, 22 Oct 2018 08:41:00 GMT 后过期，需要再次请求。
 
+
+
 - **Cache-Control**
 
 Cache-Control 可以在请求头或者响应头中设置，并且可以组合使用多种指令：
 
 ![image-20220623180525882](../img/image-20220623180525882.png)
 
-> 客户端缓存内容，是否使用缓存则需要经过协商缓存来验证决定。表示不使用 Cache-Control的缓存控制方式做前置验证，而是**依然缓存，但要使用 Etag 或者Last-Modified字段来控制缓存**。需要注意的是，no-cache这个名字有一点误导。设置了no-cache之后，并不是说浏览器就不再缓存数据，只是浏览器在使用缓存数据时，需要先确认一下数据是否还跟服务器保持一致。
+> 客户端缓存内容，是否使用缓存则需要经过协商缓存来验证决定。表示不使用 Cache-Control的缓存控制方式做前置验证，而是**依然缓存，但要使用 Etag 或者Last-Modified字段来控制缓存**。
 
-no-store：
++ no-store：所有内容都不会被缓存，即不使用强制缓存，也不使用协商缓存
 
-> 所有内容都不会被缓存，即不使用强制缓存，也不使用协商缓存
++ no-cache：浏览器在使用缓存数据时，需要先确认一下数据是否还跟服务器保持一致。
+
++ 重新校验: 缓存有效期是86400， 但是每次使用缓存都必须像服务器确认缓存是不是能使用
+
+  ```
+  Cache-Control: max-age=86400, must-revalidate   
+  ```
+
+  
 
 ### 协商缓存
 
@@ -465,7 +353,7 @@ Etag与Last-Modified的比较
 
 ### 缓存优先级
 
-- 先判断Cache-Control，在Cache-Control的max-age之内，直接返回200 from cache；
+- 先判断Cache-Control，在Cache-Control的max-age之内，直接返回200 from cache；Cache-Control的优先级高于expires。
 - 没有Cache-Control再判断Expires，再Expires之内，直接返回200 from cache； Cache-Control=no-cache或者不符合Expires，浏览器向服务器发送请求；
 - 服务器同时判断ETag和Last-Modified，都一致，返回304，有任何一个不一致，返回200。
 
@@ -536,7 +424,7 @@ Cookie 和 Session 的区别
 
 ![image-20220623112733951](../img/image-20220623112733951.png)
 
-1.在登陆页面，用户登陆了此时，服务端会生成一个session，session中有对于用户的信息（如用户名、密码等） 
+1.在登陆页面，用户登陆,  此时，服务端会生成一个session，session中有对于用户的信息（如用户名、密码等） 
 2.然后会有一个sessionid（相当于是服务端的这个session对应的key）
 3.然后服务端在返回信息中写入set-cookie:sessionid=xxx,... 然后浏览器本地就有这个cookie了
 4.以后访问同域名下的页面时，自动带上cookie，自动检验，在有效时间内无需二次登陆
@@ -593,7 +481,7 @@ JWT(JSON Web Token),JSON格式的令牌，不保存 session 数据了，所有�
 }
 ```
 
-- JWT的原理是，服务器认证以后，生成一个 JSON 对象，发回给用户，以后，用户与服务端通信的时候，都要发回这个 JSON 对象。服务器完全只靠这个对象认定用户身份。为了防止用户篡改数据，服务器在生成这个对象的时候，会加上签名，客户端收到服务器返回的 JWT，可以储存在 Cookie 里面，也可以储存在 localStorage。此后，客户端每次与服务器通信，都要带上这个 JWT。你可以把它放在 Cookie 里面自动发送，但是这样不能跨域，所以更好的做法是放在 HTTP 请求的头信息Authorization字段里面。
+- JWT的原理是，服务器认证以后，生成一个 JSON 对象，发回给用户，以后，用户与服务端通信的时候，都要发回这个 JSON 对象。服务器完全只靠这个对象认定用户身份。为了防止用户篡改数据，服务器在生成这个对象的时候，会加上签名，客户端收到服务器返回的 JWT，可以储存在 Cookie 里面，也可以储存在 localStorage。此后，客户端每次与服务器通信，都要带上这个 JWT。可以把它放在 Cookie 里面自动发送，但是这样不能跨域，所以更好的做法是放在 HTTP 请求的头信息Authorization字段里面。
 
 ```
 Authorization: Bearer 
@@ -739,56 +627,6 @@ if(result!==null){
     console.log('你好',result)
 }
 ```
-
-### Service Worker
-
-#### 1.是什么
-
-Service Worker 是运行在浏览器背后的独立线程，脱离浏览器窗体的JS线程
-
-- window以及DOM都是不能访问的，此时我们可以使用self访问全局上下文。
-- 设计为完全异步，同步API（如XHR和localStorage）不能在Service Worker中使用
-- 必须是https协议或者localhost
-
-#### 作为消息中转站页面间通信
-
-- 注册serviceWorker
-
-```
-navigator.serviceWorker.register('../util.sw.js').then(function () {
-    console.log('Service Worker 注册成功');
-});
-/* ../util.sw.js Service Worker 逻辑 */
-self.addEventListener('message', function (e) {
-    console.log('service worker receive message', e.data);
-    e.waitUntil(
-        self.clients.matchAll().then(function (clients) {
-            if (!clients || clients.length === 0) {
-                return;
-            }
-            clients.forEach(function (client) {
-                client.postMessage(e.data);
-            });
-        })
-    );
-});
-```
-
-在 Service Worker 中监听了message事件，获取页面（从 Service Worker 的角度叫 client）发送的信息。然后通过self.clients.matchAll()获取当前注册了该 Service Worker 的所有页面，通过调用每个client（即页面）的postMessage方法，向页面发送消息。这样就把从一处（某个Tab页面）收到的消息通知给了其他页面。
-
-- 页面监听 Service Worker 发送来的消息：
-
-```
-/* 页面逻辑 */
-navigator.serviceWorker.addEventListener('message', function (e) {
-    const data = e.data;
-    const text = '[receive] ' + data.msg + ' —— tab ' + data.from;
-    console.log('[Service Worker] receive message:', text);
-});
-navigator.serviceWorker.controller.postMessage(mydata);
-```
-
-#### 
 
 ------
 
@@ -1173,3 +1011,88 @@ service worker是实现PWA的核心，service worker是一个独立的浏览器�
 ### Push Notification
 
 Push：服务器端将更新的信息传递给 SW ，Notification： SW 将更新的信息推送给用户。
+
+
+
+# Service Worker
+
+Service Worker 是运行在浏览器背后的独立线程，脱离浏览器窗体的JS线程， 不会对当前程序的执行线程造成阻塞
+
+- window以及DOM都是不能访问的，此时我们可以使用self访问全局上下文。
+- 设计为完全异步，同步API（如XHR和localStorage）不能在Service Worker中使用
+- 必须是https协议或者localhost
+
+## 1.Service Worker的作用
+
++ service worker是实现PWA的核心，通过service worker可以实现页面离线访问、用户消息推送等功能。
+
++ 作为消息中转站页面间通信
+
+  注册serviceWorker
+
+```js
+navigator.serviceWorker.register('../util.sw.js').then(function () {
+    console.log('Service Worker 注册成功');
+});
+/* ../util.sw.js Service Worker 逻辑 */
+self.addEventListener('message', function (e) {
+    console.log('service worker receive message', e.data);
+    e.waitUntil(
+        self.clients.matchAll().then(function (clients) {
+            if (!clients || clients.length === 0) {
+                return;
+            }
+            clients.forEach(function (client) {
+                client.postMessage(e.data);
+            });
+        })
+    );
+});
+```
+
+在 Service Worker 中监听了message事件，获取页面（从 Service Worker 的角度叫 client）发送的信息。然后通过self.clients.matchAll()获取当前注册了该 Service Worker 的所有页面，通过调用每个client（即页面）的postMessage方法，向页面发送消息。这样就把从一处（某个Tab页面）收到的消息通知给了其他页面。
+
+页面监听 Service Worker 发送来的消息：
+
+```js
+/* 页面逻辑 */
+navigator.serviceWorker.addEventListener('message', function (e) {
+    const data = e.data;
+    const text = '[receive] ' + data.msg + ' —— tab ' + data.from;
+    console.log('[Service Worker] receive message:', text);
+});
+navigator.serviceWorker.controller.postMessage(mydata);
+```
+
+## 2.Service Worker的缓存策略
+
++ Cache First（缓存优先）
+
+  ```
+  当请求资源时，Service Worker 首先检查缓存。如果资源在缓存中存在，就直接从缓存中返回，而不发起网络请求。这种策略适用于那些不经常变化的资源，例如应用的核心代码、样式表和图片。
+  ```
+
++ Network First（网络优先）
+
+  ```
+  Service Worker 首先尝试从网络获取资源。如果网络请求失败（例如用户处于离线状态），则从缓存中获取资源。这种策略适用于那些需要及时获取最新数据的资源，但同时也希望在离线时提供备用数据。
+  ```
+
++ 仅缓存
+
++ 仅网络
+
++ 缓存与网络竞速
+
+  ```
+  Service Worker 同时发起缓存和网络请求，哪个先返回就使用哪个。这种策略适用于需要最快可用的资源，无论是来自缓存还是网络。
+  ```
+
++ 过期时重新验证
+
+  ```
+  Service Worker 返回缓存中的资源，同时发起网络请求以获取更新的资源。如果网络请求成功，那么更新缓存，下一次就能获取到最新的资源。这种策略适用于需要提供尽可能新的资源，同时又能容忍一定程度的过时。
+  ```
+
+  
+

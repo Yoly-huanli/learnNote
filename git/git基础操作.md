@@ -24,3 +24,13 @@ node_modules/   表示过滤这个文件夹
 
   ===》 直接git checkout -b xxx即可，不需要做任何操作
 
+# git rebase
+
++ 整理提交记录
+
+  ```
+  # 将最近的三个提交合并为一个新的提交
+  git rebase -i HEAD~3
+  ```
+
++ 合并代码，解决冲突
