@@ -1,35 +1,65 @@
 [toc]
 
-# 变量
+# 基本信息
 
-+ Dart 也可以使用 var 关键字来声明一个可变的变量，此时编译器会根据变量初始值自动推断类型
+| 语言 | 作用                                                         | 语言                                                         |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Js   | Web 开发的核心语言，可用于服务器端（如 Node.js）。移动应用（如 React Native）和桌面应用（如 Electron）。 | **面向对象的：**基于原型（prototype） **弱类型**：变量的类型在运行时确定 **类定义**：class **单继承** **单线程** **编译方式**：JIT 即时编译 |
+| Dart | 在Flutter 框架中作为主要语言。也可用于服务器端开发。         | **面向对象的**：基于类（class）和对象（object） **强类型**：变量的类型在编译时确定 **类定义**：class **单继承** **单线程** **编译方式**：同时支持AOT和JIT |
 
-+ Dart 可以显示指明类型来声明一个可变的变量。
+# 基本介绍
 
-+ Dart可以指明变量是否可以为空类型
++ 入口
 
-+ Dart 中变量如果是非空类型，那么必须给一个默认值，否则无法编译通过。如果是可空类型，默认值都为 null
+  main是入口函数，所有代码通过main才能调用
 
-+ 延迟初始化，通过late关键字修饰，使用到的时候才会进行初始化
+```dart
+//dart执行函数体
+void main() {
+  print('');
+}
+```
 
-+ Dart 中还可以使用 Object 和 dynamic 关键字来声明一个变量
++ 代码注释: 和js一样
 
-  ```DART
-  var name = 'Bob'; // name 变量的类型被推断为 String
-  String name = 'Bob'; //显示指定类型
-  int? name; // 可空类型
-  late String description = getOrder(); //延迟初始化
-  Object str = "erdai666"; // Object声明变量
-  dynamic str = "erdai666"; // dynamic声明变量
-  ```
+```
+1、//
+2、///
+3、/* */
+```
 
-# 常量
++ 打印输出
 
-常量：final以及const的变量不可被重新赋值。
+```
+print('');
+```
 
-+ const： 声明编译时的常量，必须给一个明确的编译常量值（即编译期间就确定的值），const 表示内容和引用都不可变
++ 类型转化： dart不做类型转换，定义变量时，需要确认数据类型
++ 空安全： **`?`** 用于标记一个类型是可空的，即该类型的变量可以是该类型的实例或是 `null`。声明一个变量为 `int?`，则它可以是 `int` 类型，也可以是 `null`，声明一个变量为 `int`，则它不能是 `null`。
 
-+ final： 声明运行时的常量，可以通过计算或者方法获取一个值（即运行期间确定的值）进行赋值，final 表示引用不可变，但内容是可变的。
+# 变量声明
+
+|      | Js                                            | Dart                                                         |
+| ---- | --------------------------------------------- | ------------------------------------------------------------ |
+| 变量 | var：全局作用域, let：块级作用域，可重新赋值  | **不明确类型**：var：根据右侧的值推断变量的类型，并且该变量在之后的代码中类型不会改变   dynamic：在运行时决定其具体类型的变量。后期可以改变 |
+|      |                                               | **明确类型**：int a = 5; // 整数类型double b = 5.5; // 浮点数类型 |
+| 常量 | const：块级作用域，运行时常量，赋值后不能改变 | final：声明一个不可变的变量（常量），运行时确认，该值只能被赋值一次 |
+|      |                                               | const：编译时常量，必须在编译时就能确定其值，运行时不能变    |
+
+**使用 `const` 的情况**：当 Widget 的内容、构造函数参数在编译时已知且不变时，使用 `const` 可以优化性能并减少不必要的重建。 **不使用 `const` 的情况**：当 Widget 的内容或参数是动态的、在运行时决定时，或者涉及到可变数据时，不适合使用 `const`。
+
+通过late关键字修饰，使用到的时候才会进行初始化
+
+```DART
+var name = 'Bob'; // name 变量的类型被推断为 String
+String name = 'Bob'; //显示指定类型
+int? name; // 可空类型
+late String description = getOrder(); //延迟初始化
+Object str = "erdai666"; // Object声明变量
+dynamic str = "erdai666"; // dynamic声明变量
+```
+
+
 
 ```dart
 final a;//编译通过
@@ -44,10 +74,27 @@ set.add(4);
 
 var list = const [1,2,3];
 list.add(4);//运行报错，const list 不可新增元素
-
 ```
 
-# 类型
+# 数据类型
+
+|                  | Js                                                           | Dart                                                         |
+| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| number           | **number**: 包含整数和浮点数，没有区分这两种类型。 **bigInt**: 用于表示任意精度的整数。 | **num：**数字类型的共同特征int**: 整数类型，支持任意精度。 **double**: 浮点数类型。 |
+| string           | 字符串                                                       | 字符串                                                       |
+| boolean          | 布尔值，`true` 或 `false`。                                  | 布尔值，`true` 或 `false`。                                  |
+| symbol           | 唯一且不可变的值，主要用于对象属性的唯一标识。               | 用于表示符号（主要用于标识符）                               |
+| undefined        | 未定义，表示变量未赋值。                                     |                                                              |
+| null             | 表示空值或无值。int``? nullableInt; ``// Null，可能是null    | 表示空值，Dart 的 `Null` 类型是一个单一的值 `null`。         |
+| 普通对象         |                                                              |                                                              |
+| 数组Array        |                                                              | List类似于 JavaScript 的数组。                               |
+| 日期Date         | 日期                                                         |                                                              |
+| Function         | 函数类型                                                     | 函数类型                                                     |
+| RegExp正则表达式 | 正则                                                         |                                                              |
+| Map              | 键值对集合。                                                 | 键值对集合，类似于 JavaScript 的对象字面量。 Map<String, String> map = {  ``'key'``: value'} |
+| Set              | 集合，包含唯一值的集合。                                     | 集合，包含唯一值的集合。                                     |
+| enum             | 无                                                           | 枚举类型enum` `PlanetType { terrestrial, gas, ice }          |
+| runes            | 无                                                           | 用于表示 UTF-16 编码的字符序列。var runes = Runes(``'Hello World'``); print(String.fromCharCodes(runes)); ``// 输出: Hello World |
 
 ## 1.数字类型
 
@@ -55,6 +102,13 @@ num：数字类型，int和double都是它的子类
 
 + int：整数类型
 + double：浮点数类型
+
+```dart
+int a = 42; // int
+num a = 42；// int
+ 
+double pi = 3.14; // double
+```
 
 ## 2.字符串类型
 
@@ -141,6 +195,31 @@ a.contains(2); // true
 a.clear();
 ```
 
+
+
+```
+常用属性：
+   length       长度
+   isEmpty      是否为空
+   isNotEmpty   是否不为空
+   reversed     倒叙排序，不再是数组，toList转成数组
+ 
+ 常用方法：
+   add：增加数据
+   addAll：拼接数组
+   indexOf：查找某一项，找到返回索引值、找不到返回-1
+   remove：删除某个值，返回删除后List
+   removeAt：删除某个下标值，返回删除后List
+   fillRange（1，3，‘aaa’）1到3之前修改成aaa，并返回修改后数组
+   insert（1，’aaa’）指定位置插入，在下标1插入aaa
+   insertAll（1， [‘ds’,’ddsa]）在下标1插入LIst
+   toList() 其他类型转换成List
+   join() List转换成字符串
+   split() 字符串转换成LIst
+```
+
+
+
 ## 6.Set 集合
 
 Set 的元素都是唯一的
@@ -175,6 +254,12 @@ names.contains("Dart"); //true
 names.clear();
 ```
 
+```
+// Set常用方法
+   new Set() 去除重复集合数据
+   new Set().toList() 在转换成集合
+```
+
 ## 7.Map 集合
 
 初始化
@@ -196,6 +281,25 @@ var map4 = Map(); //等价于：var map4 = {};
 ```
 
 常用 Api 
+
+```
+// Map：无序键值对
+   var person={}
+   var person=new Map()
+ 
+ 常用属性
+   person.keys:获取key
+   person.values:获取value
+   isEmpty
+   isNotEmpty
+ 
+ 常用方法
+   addAll：增加键值对
+   remove：删除键值对
+   containsValue：查找映射某个值 返回true/false
+```
+
+
 
 ```dart
 //1、首先定义一个 map
@@ -222,16 +326,104 @@ map.remove("key1");
 map.clear();
 ```
 
+## List、Set、Map常用方法
+
+```dart
+// List、Set、Map常用方法
+ 
+ forEach：遍历LIst中的value
+   List.forEach((value){
+     // 只能传入一个值
+   })
+ 
+ map：修改集合里面的数据
+   var newList = List.map((value， key){
+     return value*2
+   })
+   newList.toList()
+ 
+ 
+ where：循环遍历，满足条件的返回一个新数组
+   var newList = List.where((value){
+     return value > 5
+   })
+ 
+ any：是否有一个值满足条件的数据，返回true/false
+ every：每一个都满足条件，返回true/false
+ reduce 和 fold: 将集合中的元素组合成单个值。
+ expand: 将集合中的每个元素展开为一个新的集合
+ for 循环 和 for-in 循环: 用于遍历集合
+```
+
+# 类型转换
+
+## 类型判断
+
+```DART
+// 类型判断：is关键词
+var str = 'string';
+print(str is String);
+print(str is num);
+print(str is int);
+```
+
+## 特殊运算符
+
+```DART
+// 赋值运算符
+ ??= (判断是否为空，为空时才赋值)
+ a??=10（判断a是否为空，为空时才赋值10，不为空保持不变）
+ 
+ // ??条件运算符：
+ b = a ?? 10 （a为空时10赋值给b，不为空时b = a）
+ 
+ 
+// 条件属性访问：
+ a?.b 判断属性是否存在，存在访问
+ 
+ 
+// 级联运算符,连续调用对象的方法
+class Person {aa() bb() cc()}
+void main() {
+  var person = Person()
+    ..aa()  // 调用 aa() 方法
+    ..bb()  // 调用 bb() 方法
+    ..cc();  // 再次调用 cc() 方法
+}
+ 
+ 
+// 条件级联运算符，避免空指针异常
+void main（）{
+    person
+    ?..aa();  // person 为 null 时不会调用aa() 方法
+}
+```
+
 ## 类型转换
 
-+ 数字和字符串
-
-  ```dart
-  // 将 String 类型转换成 int 类型
-  var one = int.parse('1');
-  // 将 int 类型转换成 String 类型
-  String oneAsString = 1.toString();
-  ```
+```DART
+// 字符转数字
+String str1 = '123';
+var myNum = int.parse(str1);
+var myNum1 = double.parse(str1);
+ 
+//数字转字符
+var myNum2 = 25;
+var str2 = myNum2.toString();
+ 
+// 数字转 bool
+int a = 10;
+int b = 0;
+bool boolA = a != 0; // true
+bool boolB = b != 0; // false
+ 
+ 
+// String、List、Set、Map 转bool
+String nonEmpty = 'Hello';
+String empty = '';
+bool boolNonEmpty = nonEmpty.isNotEmpty; // true
+bool boolEmpty = empty.isEmpty; // true
+```
 
 
 
@@ -240,30 +432,37 @@ map.clear();
 函数定义 返回值类型  函数名（函数参数）{}
 
 ```dart
-//1、Dart 写法1：方法的参数使用：var 参数名
-String methodName(var name,var age){
-  return "erdai666";
+// dart函数声明，int代表返回值类型
+int add(int a, int b) { return a + b; }
+ 
+// 不定义返回值类型（不建议）
+getValue（a） { return a; }
+ 
+// 没有返回值的函数-void
+void message(String b) {print(b);}
+ 
+// 箭头函数，函数表达式
+var divide = (int a, int b) => a + b;
+ 
+// 匿名函数
+var greet = (String name) { return 'name';};
+ 
+// 必需参数
+void greet(String name, int age) {
+  print('$name $age');
 }
-
-//2、Dart 写法2：方法的参数使用：类型 参数名
-String methodName(String name,int age){
-  return "erdai666";
+greet('Alice', 30)
+ 
+// 可选参数
+void greet(String name, [int? age]) {
+  if (age != null) {
+    print('Hello, $name. You are $age years old.');
+  }
 }
-
-//3、Dart 写法3：方法的返回类型可省略，根据方法体最后一行代码进行返回类型推断
-methodName(var name,var age){
-  return "erdai666";
+// 命名参数 + 默认值参数
+void greet(String name, {int? age, String? city = 'beijing'}) {
+  print('$name. Age: ${age ?? 'unknown'}, City: ${city ?? 'unknown'}.');
 }
-
-//4、如果没有写返回类型，且方法体最后一行代码没有明确写返回语句，那么默认执行：return null
-methodName(var name,var age){ 
-}
-
-//5、Dart 写法4：无返回值使用 void 关键字
-void methodName(var name,var age){ 
-}
-//6、Dart 写法5：如果方法体只有一行表达式，可将其改成单行方法样式，方法名和方法体用 => 连接
-String methodName(var name,var age) => "erdai666";
 ```
 
 ## 可选参数[]
@@ -321,6 +520,16 @@ void optionFunction(var value1,{var value2 = 2,var value3}){
 }
 
 (参数名) => 方法体
+```
+
+## 异步操作
+
+```DART
+// Dart异步操作
+Future fetchData() async {
+  var data = await http.get('xxxxxx');
+  return data
+}
 ```
 
 ## 静态方法
@@ -383,6 +592,8 @@ void main(){
 + 条件运算符: condition ? expr1 : expr2,  expr1 ?? expr2(如果 expr1 不等于 null, 则执行 expr1 并返回 expr1 的值，否则执行并返回 expr2 的值)
 
 # 流程控制
+
+和js完全一样
 
 ## if-else
 
@@ -490,312 +701,354 @@ void main() {
 }
 ```
 
-# 类
+# 泛型
+
+泛型（Generics）是一种编程特性，允许你在定义类、接口、函数或方法时不指定具体的数据类型，而是在实际使用时再指定。泛型提供了类型安全和代码重用的能力，可以使代码更加灵活和强大。一般用<T>表示
+
+```DART
+T echo<T>(T value) {
+  return value;
+}
+ 
+void main() {
+  print(echo<int>(123)); // 输出: 123
+  print(echo<String>('Hello')); // 输出: Hello
+}
+ 
+这里的 echo 方法是一个泛型方法，它的参数和返回值都是 T 类型。调用时可以指定 T 的具体类型。
+```
+
+
+
+# 类class
 
 Dart 是面向对象编程语言，对象都是由类创建的，所有类都是由 Object 类派生出来的子类，除了 Object , 所有类只有一个父类（即只能继承一个父类）
 
 尽管 Dart 语言中一个类只能继承一个父类，但是 Dart 语言提供了 mixin 机制，可以复用多个类，达到类似多继承的效果
 
-## 类和对象
+类分为具体类和抽象类
 
-+ Dart 没有 public、protected 和 private 等成员访问限定符。默认情况下属性，方法，类等都是共有的。如果想要表示私有，则以下划线 _ 开头去命名
-+ Dart 中实例化对象，new 关键字可写可不写
-+ 当我们在类中创建私有属性时，我们应该给私有属性提供 getter 和 setter 方法供外界访问：
+## 1.具体类
 
-```dart
-class Person {
-  // 定义类成员属性，默认类的成员属性和方法都是共有的
-  var name;
-  // 以下划线 ( _ ) 开头命名的属性代表私有成员属性
-  var _age;
-  // 跟类名同名的方法，为构造方法
-  // 这里自定义了一个携带参数的构造方法。
-  // 如果我们没有自定义构造方法，会自动生成一个不带参数的默认构造方法
-  Person(var name, var age) {
-    // 因为参数名和类属性名同名，可以使用this引用当前对象
-    this.name = name;
-    // 可以忽略this关键字，直接引用类成员
-    _age = age;
-  }
-  
-  //为 _age 提供 getter 和 setter 方法
-  int get age{
-    return _age;
-  }
-  set age(int age){
-    _age = age;
-  }
-  // 定一个 public 的方法
-  String greet(String who) => 'Hello, $who. I am $name, my age is $_age !';
-}
-void main(){
-  var person = Person("erdai",18);
-  //下面这句就是调用了 age 的 set 方法
-  person.age = 20;
-  var greet = person.greet("lucy");
-  print(greet);
-}
-//打印结果
-Hello, lucy. I am erdai, my age is 20 !
-```
-
-## 构造方法
-
-如果我们没有自定义一个构造方法，会自动生成一个不带参数的默认构造方法
++ 类的定义：使用 **class** 关键字
++ 构造函数：创建类的实例，并初始化其属性。new 关键字可写可不写
++ 属性和字段：属性是类中的数据成员，属性可以是公有的或私有的
++ 方法：方法是类中的函数，方法可以是公有的（可以被类外部调用）或私有的（以 _ 开头，类外部无法直接调用）， 受保护的（外部不能调用，只能在子类中访问）
++ 多态性：允许对象以父类的类型存在，但实际运行时可能是子类的实例
++ 访问器：“getter”（获取器）和“setter”（设置器）是定义访问器的关键字，属于计算属性，来控制对类属性的访问和修改
 
 ```dart
-// 这个类会生成默认的构造方法
-class Person {
-    String name;
-}
-
-// 通过默认构造方法实例化对象
-var p = Person();
-```
-
-+ 自定义构造方法
-
-```dart
-class Point{
-  var x,y;
-  
-  Point(var x,var y){
-    // 通过this访问成员属性，当然一般除非出现命名冲突，否则可以忽略this
-    this.x = x;
-    this.y = y;
-  }
-}
-======>简写
-class Point{
-  var x,y;
-  // 直接将构造方法的第一个参数赋值给this.x, 第二个参数赋值给this.y
-  Point(this.x,this.y);
-}
-======> 初始化参数列表
-class Point{
-  var x,y;
-  // 冒号 : 后面的表达式就是参数初始化列表，每个表达式用逗号分隔
-  Point(var x,var y): this.x = x,this.y = y{
-    // 使用参数初始化列表初始化对象属性，这里如果没有别的初始化工作要做，可以是空的
-  }
-}
-=======>多个初始化方法
-  class Point{
-  var x,y;
-  Point(this.x,this.y);
-  // 命名构造方法 namedConstructor
-  // 这里使用参数初始化列表，直接通过 this 调用上面的构造方法，传入两个参数 0，初始化对象
-  Point.namedConstructor():this(0,0);
-}
-==========>factory 构造方法
-factory 构造方法只能访问静态属性和静态成员方法，因此不能访问 this 引用
+class Person{
+ String name; // 变量：可以在类的外部直接访问和修改。
+ int age;
+ int _age; // 私有变量：以 _ 开头，只能在类内部访问。用于封装和保护内部状态。
+ Person(this.name,this.age); // 默认构造函数的简写，初始化类的实例， 接受参数并将这些值赋给相应的属性
+ Person.now(){} // 命名构造函数，处理不同的初始化情况
+ // get、set修饰符定义访问器，计算属性 对私有字段的访问
+ int get age1 => _age;
+ set nowAge(value) {
+ this._age = value;
+ }
   
-//1、定义个日志类
-class Logger {
-  final String name;
-  bool mute = false;
-  // 定义一个私有的_cache属性，用来保存创建好的Logger对象
-  static final Map<String, Logger> _cache = {};
-  // 注意这个构造方法，前面使用了factory关键字修饰，这代表这个构造方法是一个工厂构造方法
-  // 工厂构造方法不会每次都创建一个新的Logger对象
-  factory Logger(String name) {
-    // 根据name判断缓存的Logger对象是否存在
-    if (_cache.containsKey(name)) {
-      // 返回缓存的Logger对象
-      return _cache[name]!;
-    } else {
-      // 如果没有缓存，则调用命名构造方法_internal创建一个Logger对象
-      final logger = Logger._internal(name);
-      // 根据name缓存logger
-      _cache[name] = logger;
-      // 返回新的Logger对象
-      return logger;
-    }
+ // 公有方法，类外部可以调用
+ void getInfo(){}
+ // 私有方法，只能在类内部使用，用于实现内部逻辑
+ void _getInfo(){}
+ 
+ // @public：公有 、 @protected保护、 @private：私有
+ void protectedMethod() {
+    print('Protected method');
   }
-  // 注意这个是一个私有的命名构造方法。
-  Logger._internal(this.name);
-  void log(String msg) {
-    if (!mute) print(msg);
-  }
+ // 静态成员-属性 or 方法, 直接通过类去调用
+ static const double pi = 3.14159;
 }
-//2、测试
-void main(){
-  var logger = Logger("erdai");
-  logger.log(logger.name);
-}
-//打印结果
-erdai
+ 
+// 使用默认构造函数实例化，允许对象以父类的类型存在，但实际运行时可能是子类的实例
+Person A = Person('Alice', 20,);
+A.getInfo()
+// 使用命名构造函数实例化
+Person B = Person.now();
+// 访问静态属性,属于类本身而不是类的实例
+Person.pi
 ```
 
-## 3.继承
+## 抽象类
 
-+ Dart 通过 extend 关键字继承一个类
-+ 子类会继承父类可见的属性和方法，不会继承构造方法
-+ 子类能够复写父类的 getter，setter，以及普通方法，使用 @override 表示覆写
++ 抽象类：abstract 关键字来定义
++ 抽象方法： Dart中没有方法体的方法称为抽象方法
++ 如果子类继承抽象类必须得实现所有的抽象方法， 如果把抽象类当做接口实现的话必须得实现所有的抽象方法。
++ 抽象类不能被实例化，只能先子类继承后再实例化
++ `get` 和 `set` 可以定义抽象访问器，强制子类实现这些未实现的访问器。已实现直接使用或者重写
 
 ```dart
-class Parent{
-  String name = "";
-  int age = 0;
-  //计算属性
-  bool get adult => this.age > 18;
-  //私有属性，对于子类不可见
-  String _address = "";
-  void method(){
-    print('Parent');
+// 定义一个抽象类 Animal
+abstract class Animal {
+  String name;
+  int age;  // 普通属性
+   
+  Animal(this.name, this.age); // 抽象类中的构造函数
+ 
+  void makeSound();  // 抽象方法（子类必须实现）
+   
+  double get sleep; // 定义抽象访问器，强制子类实现这些访问器，如果已经实现可以直接使用
+ 
+  // 普通方法（可以在子类中重写）
+  void describe() {
+    print('This is an animal named $name and it is $age years old.');
   }
+ 
 }
-class Children extends Parent{
-  void specificMethod(){
-    print('Children specificMethod');
-  }
-}
-void main(){
-  var child = Children();
-  //调用子类自己的方法
-  child.specificMethod();
-  //访问父类的属性
-  child.name = "erdai";
-  child.age = 18;
-  print('${child.name} ${child.age}');
-  //调用父类的方法
-  child.method();
-  //访问父类的计算属性
-  print('${child.adult}');
-}
-//打印结果
-Children specificMethod
-erdai 18
-Parent
-false
 ```
 
-+ Mixin:使用 with 关键字并在其后跟上 Mixin 类的名字来使用 Mixin 模式：
+## 3.具体类和抽象类区别
 
-  ```dart
-  class Performer {
-     
-  }
-  class Musician extends Performer with Musical {
-   
-  }
-  
-  mixin Musical {
-   
-  }
-   
-  ```
+区别
 
-## 4.多态
+- 1.实例化:
+  - 具体类：可以被实例化（即可以创建对象）
+  - 抽象类：不能被实例化。抽象类仅作为其他类的基础。
+- 2.抽象方法:
+  - 具体类不能包含抽象方法。
+  - 抽象类可以包含抽象方法。继承抽象类的子类必须实现这些抽象方法。
+- 3.目的:
+  - 具体类则用于创建实际的对象，包含了具体的实现细节。
+  - 抽象类用于定义一个通用的接口或模板，供其他类继承并实现。适合用于定义通用的行为和规范。
+- 4.使用场景
+  - 具体类: 用于实现实际的业务逻辑和功能。Flutter许多 UI 组件都是具体类。例如，Container、Text、Button 等都是可以直接实例化并使用的具体类
+  - 抽象类: StatefulWidge/StatelessWidget 是两个抽象类，定义了有状态/无状态组件的通用行为，而具体的组件内容需要子类继承实现, 比如StatelessWidget类的build是抽象方法，继承了StatelessWidget组件的所有组件都必须实现build方法，它是widget类型
 
-+ 简单的理解：多态就是将子类的对象赋值给父类的引用，同一个方法调用会有不同的执行效果
+## 4.继承
 
-+ 多态的体现：父类定义一个方法，让继承它的子类去实现，每个子类有不同的表现
+继承是面向对象编程（OOP）的一个核心特性，它允许一个类（子类）继承另一个类（父类）的属性和方法
+
++ 单继承：Dart 支持单继承，即一个类只能继承自一个直接父类。
++ 继承成员：子类继承父类的实例变量和方法，但不能继承父类的构造函数。子类可以重写父类的方法，以改变或扩展其行为。
++ super 关键字：子类可以使用 super 关键字调用父类的构造函数或方法。super 允许子类在重写方法时访问父类的实现。
++ 重写方法：使用 @override 注解可以明确表明该方法是重写父类的方法，来提供自己的实现。
++ extends 关键字：子类使用 **extends** 关键字来继承父类。
+
+### **继承具体类**
 
 ```dart
-class Animal{
-  void animalType(){
+class Student extends Person {
+  String studentId; // 新增的属性
+  // 构造函数, super是指把参数传递到父类，调用父类的构造方法进行初始化
+  Student(String name, int age, this.studentId) : super(name, age);
+ 
+  // 重写父类的方法
+  @override
+  void greet() {
+    print('Hello, I am $name, a student with ID $studentId, and I am $age years old.');
+  }
+ 
+  // 新增的方法
+  void study() {
+    print('$name is studying.');
   }
 }
-class Dog extends Animal{
-  @override
-  void animalType() {
-    print('I am dog');
-  }
-}
-class Pig extends Animal{
-  @override
-  void animalType() {
-    print('I am pig');
-  }
-}
-void main(){
-  //子类的对象赋值给父类的引用
-  Animal animal1 = Dog();
-  Animal animal2 = Pig();
-  //同一个方法调用会有不同的执行效果
-  animal1.animalType();
-  animal2.animalType();
+// 实例化
+void main() {
+  // 实例化 Student 类
+  var student = Student('Alice', 20, 'S12345');
+  // 调用重写的方法
+  student.greet(); // 输出: Hello。。。
+  // 调用子类特有的方法
+  student.study(); // 输出: Alice is studying.
+  // 由于 _getInfo 在 Person 类中是私有的，不能从 Student 实例中直接访问
 }
 ```
 
-## 5.抽象类和抽象方法
-
-### 抽象类
-
-+ 抽象类就是不能实例化的类，通过 abstract 关键字声明，其作用是用于定义接口
-+ 继承抽象类，子类必须要实现所有抽象方法，否则会报错
+### 继承抽象类
 
 ```dart
-// 使用 abstract 关键字修饰的类，就是抽象类
-abstract class Doer{
-  // 抽象类跟普通类一样，可以定义成员变量，成员方法。
-  String name = "";
-  // 定义个抽象方法，这个方法我们没有实现具体的功能
-  void doSomething();
+// 具体类 Dog 继承抽象类 Animal
+class Dog extends Animal {
+  Dog(String name, int age) : super(name, age);
+ 
+  @override
+  void makeSound() {
+    print('Woof! Woof!');
+  }
+  @override
+  double get sleep => print('')
 }
-
-// 继承抽象类 Doer
-class EffectiveDoer extends Doer{
-  // 实现抽象类的抽象方法
-  @override
-  void doSomething() {
-    print('doSomething');
+ 
+// 具体类 Cat 继承抽象类 Animal
+class Cat extends Animal {
+  Cat(String name, int age) : super(name, age);
+ 
+  @override
+  void makeSound() {
+    print('Meow! Meow!');
+  }
+  @override
+   double get sleep => print('')
   }
 }
-
-void main(){
-  var doer = EffectiveDoer();
-  doer.doSomething();
-  doer.name = "erdai";
-  print(doer.name);
+ 
+// 实例化
+void main() {
+  // myDog使用父类的类型Animal
+  Animal myDog = Dog('Buddy', 3);
+  Animal myCat = Cat('Whiskers', 2);
+ 
+  myDog.describe(); // 输出: This is 。。。
+  myCat.describe(); // 输出: This is 。。。
+ 
+  myDog.makeSound(); // 输出: Woof! Woof!
+  myCat.makeSound(); // 输出: Meow! Meow!
 }
-
-//打印结果
-doSomething
-erdai
 ```
 
-### 抽象方法
+### 区别
 
-+ 抽象方法就是没有实现的方法，Dart 中的抽象方法不能用 abstract 声明，Dart 中没有方法体的方法就称为抽象方法
+共同点：
 
-+ 如果类中有抽象方法 , 必须将该类标为抽象类 ;
+- 1.无论是具体类继承还是抽象类继承，子类都继承父类的属性和方法，并可以重写父类的方法。
+- 2.实现多态性：两者都可以通过多态性实现不同子类的行为统一处理。
 
+区别
 
+- 1.具体类：子类可以重写方法或使用父类提供的实现。
+- 2.抽象类：子类必须实现抽象类中的抽象方法（如果有），但也可以使用抽象类中提供的具体方法实现。
 
-## 6.接口
+使用场景
+
+- 1、代码重用：继承可以避免重复代码，将通用功能放在父类中，子类可以直接继承这些功能。
+- 2、构建层次结构：建立类之间的层次结构，使代码更具组织性和可维护性。例如，所有动物类可以继承自一个基类 Animal。
+
+## 4.接口
 
 + Dart 中的接口没有使用 interface 关键字定义，而是普通类和抽象类都可以作为接口被实现。但是一般都是用抽象类来定义接口
++ 通过 implements 来实现接口
++ 多重继承：Dart 不支持多重继承，但允许一个类实现多个接口，结合不同的行为。class C implements A,B{}
 
-+ 子类通过 implements 来实现接口
+### 具体类作为接口
 
-+ 默认情况每一个类都**隐含**一个包含所有公有成员（属性和方法）的接口定义
+将一个具体类作为接口，那么这个接口中的所有方法都需要在实现类中**重新实现**。
+
+这是因为具体类作为接口时，接口中的方法没有实现，所有方法都被视为抽象的
 
 ```dart
-abstract class Fruit{
-  // 包含在隐式接口里面
-  String name = "";
-  
-  // 构造方法不包含在隐式接口里面
-  Fruit(this.name);
-  // 包含在隐式接口里面
-  void eat();
-}
-
-class Apple implements Fruit{
-  @override
-  String name = "苹果";
-  @override
-  void eat() {
-    print('吃$name');
+class Vehicle {
+  void start() {
+    print('Starting vehicle');
+  }
+ 
+  void stop() {
+    print('Stopping vehicle');
   }
 }
-void main(){
-  var fruit = Apple();
-  fruit.eat();
+ 
+// 实现接口的类
+class Car implements Vehicle {
+  @override
+  void start() {
+    print('Starting car');
+  }
+ 
+  @override
+  void stop() {
+    print('Stopping car');
+  }
+}
+ 
+void main() {
+  Vehicle myCar = Car();
+  myCar.start(); // 输出: Starting car
+  myCar.stop();  // 输出: Stopping car
 }
 ```
+
+### 抽象类作为接口
+
+实现一个抽象类作为接口，你必须实现**所有**抽象方法。普通方法不需要。
+
+```dart
+abstract class Animal {
+  void makeSound(); // 抽象方法
+  void move();      // 另一个抽象方法
+  void run(){ print()} // 普通方法
+}
+ 
+ 
+// 实现接口的类
+class Dog implements Animal {
+  @override
+  void makeSound() {
+    print('Bark');
+  }
+ 
+  @override
+  void move() {
+    print('Run');
+  }
+}
+ 
+void main() {
+  Animal dog = Dog();
+  dog.makeSound(); // 输出: Bark
+  dog.move();      // 输出: Run
+}
+```
+
+## 5.mixins
+
+使用**mixin with** 关键字
+
++ 代码重用：mixin 允许在多个类之间共享代码，避免代码重复。
++ 多重功能：一个类可以使用多个 mixin 来组合多种功能。
++ 解耦合：将功能模块化，使代码更加可维护和清晰。
+
+```dart
+// 定义多个 mixin
+mixin Logger {
+  void log(String message) {
+    print('Log: $message');
+  }
+}
+ 
+mixin Authenticator {
+  void authenticate() {
+    print('Authenticated');
+  }
+}
+ 
+// 使用多个 mixin 的类
+class User with Logger, Authenticator {
+  final String name;
+ 
+  User(this.name);
+ 
+  void greet() {
+    log('Hello, my name is $name');
+    authenticate();
+  }
+}
+ 
+void main() {
+  var user = User('Alice');
+  user.greet(); // 输出: Log: Hello, my name is Alice
+               //          Authenticated
+}
+```
+
+### **接口和mixin对比**
+
+共同点
+
+- 1.功能复用：都是用于代码复用和组织的机制。接口通过强制实现方法来实现标准化，mixin 通过将功能块插入类中来实现功能复用。
+- 2.可组合性：接口和 mixin 都支持一定程度的可组合性。你可以在一个类中组合多个接口或 mixin，从而创建复杂的功能。
+- 3.没有构造函数：接口（作为类）和 mixin 都不应该包含构造函数。接口定义方法签名，mixins 只定义功能。
+
+区别
+
+- 接口: 用于定义契约。接口的主要目的是提供一种标准化的方式来确保类实现了某些特定的方法。
+- Mixin: 用于在类中复用代码。Mixin 允许将功能块添加到类中，避免了复杂的继承层次结构。
+- 接口: 一个类可以实现多个接口，并且必须实现所有接口中的方法。
+- Mixin: 一个类可以使用多个 mixin，而 mixin 不要求类必须实现特定的方法或属性。
+- 接口: 类可以实现多个接口，但接口之间没有继承关系。
+- Mixin: 类可以使用多个 mixin，实现代码的复用。Mixin 允许在类之间共享功能。
 
 # 泛型
 
@@ -902,7 +1155,7 @@ BaseClass baseMethod...
 
 # 库和可见性
 
-import 和 library 关键字可以帮助你创建一个模块化和可共享的代码库。代码库不仅只是提供 API 而且还起到了封装的作用：以下划线（_）开头的成员仅在代码库中可见。 每个 Dart 程序都是一个库，即便没有使用关键字 library 指定。
+import 和 library 关键字可以帮助创建一个模块化和可共享的代码库。代码库不仅只是提供 API 而且还起到了封装的作用：以下划线（_）开头的成员仅在代码库中可见。 每个 Dart 程序都是一个库，即便没有使用关键字 library 指定。
 
 + 使用库: 使用 import 来指定命名空间以便其它库可以访问。
 
@@ -927,64 +1180,92 @@ import 'package:lib2/lib2.dart' hide foo;
 import 'package:greetings/hello.dart' deferred as hello;
 ```
 
+## 如何管理package
+
++ 引入新的依赖package
+
+  ```js
+  dart pub add vector_math
+  
+  // 在pubspec.yaml中
+  dependencies:
+    vector_math: ^2.1.3
+  ```
+
++ 更新package
+
+  ```js
+  // pubspec.lock是安装包的文档版本信息， 可以先修改版本再upgrade
+  dart pub upgrade
+  // 也可以直接get
+  $ dart pub get
+   vector_math 2.1.3
+  ```
+
+  
+
 # 异步处理
 
-## 异步过程
+## Future
 
-+ Future：代表的是一个异步的计算任务，如果任务还没执行完成，我们是拿不到异步任务的结果
++ Future 类似于 JavaScript 中的 Promise ，代表在将来某个时刻会返回一个结果。
++ 适合处理单一异步操作的结果或错误。
++ 用于需要等待单个异步结果的场景。
++ 支持链式调用和 `await` 关键字，使得处理异步结果和错误变得直观。
++ 例如，发起网络请求、读取文件或计算结果
 
 ```dart
-import 'package:http/http.dart' as http;
-void main() {
-  var url = "https://www.baidu.com/";
-  //调用 get 函数请求 url, 返回一个封装了 http 请求任务的 future 对象
-  Future fTask = http.get(Uri.parse(url));
-  //打印 future 对象
-  print(fTask);
-  
-  // 向 future 对象注册回调函数，处理请求结果
-  fTask.then((response) => {
-    print('Response status: ${response.statusCode}')
-  });
-  // 打印 main 函数结束标记
-  print('main end...');
+Future<String> fetchData() async {
+  // 模拟网络请求
+  await Future.delayed(Duration(seconds: 2));
+  return 'Data fetched';
 }
-
-======> async和await
-void main() async{
-  var url = "https://www.baidu.com/";
-  //请求 url, 通过 await，等待 future 异步计算任务的结果，执行成功就直接返回结果
-  var response = await http.get(Uri.parse(url));
-  print('Response status: ${response.statusCode}');
-  print('main end...');
+ 
+void main() async {
+  try {
+    String data = await fetchData();
+    print(data); // 输出: Data fetched
+  } catch (e) {
+    print('Error: $e');
+  }
 }
+ 
+async：
+返回一个 Future。适用于异步操作，函数在执行完成后将结果返回给调用者。
+只能返回一个最终的结果或者错误。函数体内的 await 用于等待异步操作的完成。
 ```
 
-+ Stream:代表一个异步的数据序列，是一种异步读取流式数据的方式，使用格式如下：
+## Stream
+
+Stream 类可以用来获取一系列的值，比如，一系列事件。
+
+- 适合处理一系列异步事件或数据流。
+- 用于需要处理多个事件、动态数据更新或实时数据流的场景。
+- 支持注册监听器，并使用 `await for` 循环处理数据流中的每个事件。
+- 例如，用户输入、实时更新数据、文件的逐步读取等
 
 ```dart
-Future<int> sumStream(Stream<int> stream) async {
-  var sum = 0;
-  await for (final value in stream) {
-    sum += value;
-  }
-  return sum;
-}
-
-//async* 表示这是一个需返回 Stream 类型参数的异步函数
-Stream<int> countStream(int to) async* {
-  for (int i = 1; i <= to; i++) {
-    //yield 在这里表示暂时让出资源让其他代码执行
-    yield i;
+import 'dart:async';
+ 
+Stream<int> countStream() async* {
+  for (int i = 1; i <= 5; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    yield i; // 产生一个新事件
   }
 }
-void main() async{
-  var stream = countStream(10);
-  //通过 await 等待 sumStream 计算返回结果
-  var sum = await sumStream(stream);
-  print(sum);
+ 
+void main() async {
+  Stream<int> stream = countStream();
+   
+  // 监听流中的事件
+  await for (int value in stream) {
+    print(value); // 每秒输出 1, 2, 3, 4, 5
+  }
 }
-
+ 
+async*:
+返回一个 Stream。适用于异步生成器，允许逐步生成数据项，并且可以在多个时间点上发出事件。
+使用 yield 关键字可以逐步产生多个数据项，并将它们发送到 Stream
 ```
 
 

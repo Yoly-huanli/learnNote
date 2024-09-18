@@ -1,5 +1,81 @@
 [toc]
 
+# html代码第一行的作用
+
+> HTML 代码的第一行用于声明文档的类型，并且告诉浏览器使用哪种 HTML 的标准来解析页面
+
+# html里的meta属性
+
+meta标签一般放在`head`部分, 用来传达信息
+
++ 如果设置了 `name`属性，`meta` 元素提供的是文档级别的元数据，应用于整个页面。
++ 如果设置了 `http-equiv`属性，`meta` 元素则是编译指令，提供的信息与类似命名的 HTTP 头部相同。
++ 如果设置了 `charset`属性，`meta` 元素是一个字符集声明，告诉文档使用哪种字符编码。
++ 如果设置了 `itemprop` 属性，`meta` 元素提供用户定义的元数据。
+
+## name
+
+`name`和`content`一起使用，前者表示要表示的元数据的`名称`，后者是元数据的`值`。
+
+```html
+// 作者机构名称
+<meta name="author" content="aaa@mail.abc.com">
+// 描述
+<meta name="description" content="这里是网站描述">
+// 关键词
+<meta name="keyword" content="keyword1,keyword2">
+// 视口
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+// 爬虫行为：none:搜索引擎将会忽略此网页
+<meta name="robots" content="all">
+// 指定双核浏览器的渲染方式， 如360浏览器
+<meta name="renderer" content="webkit"> //默认webkit内核
+
+```
+
+## http-equiv
+
+`http-equiv`也是和`content`一起使用，前者表示要表示的元数据的`名称`，后者是元数据的`值`。
+
+```html
+// 做IE浏览器适配,告诉浏览器，以当前浏览器支持的最新版本来渲染
+<meta http-equiv="X-US-Compatible" content="IE=edge"> 
+// 声明文档类型和字符集
+<meta http-equiv="Content-Type" content="text/html"> 
+// a标签自动启动DNS解析
+<meta http-equiv="x-dns-prefetch-control" content="on> 
+
+```
+
+
+
+
+
+# 语义化
+
+html5 新增了语义化标签 header、nav、section、aside、footer、aside、article
+
+- div + css 能解决布局问题，但是可读性不好，语义化读者更容易读懂
+- SEO 搜索引擎优化， 机器更容易读懂
+- 更好地支持各种终端，例如无障碍阅读和有声小说等
+
+# ARIA
+
+可访问性丰富的互联网应用程序（Accessible Rich Internet Applications）是一组用于提高Web应用程序可访问性的技术规范
+
++ ARIA属性主要用于通过标记HTML元素来提供有关元素的附加语义信息
++ 便于辅助技术（如屏幕阅读器）更好地理解和处理页面内容， 可将文本和图像内容呈现为语音或盲文输出
+
+## role
+
+- Widget 角色：主要是各种可交互的控件。
+- 结构角色：文档的结构。
+- 窗体角色：弹出的窗体。
+
+![image-20240219165110983](../img/image-20240219165110983.png)
+
+
+
 # SVG
 
 ```html
@@ -111,3 +187,9 @@ function canvasToImage() {
   ```
 
   
+
+# 块级元素和内联元素
+
+块级元素diaplay:block/table独占一行：div、h1、table、ul、ol、p
+
+内联元素diaplay:inline/inline-block: span、input、img、button等

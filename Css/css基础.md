@@ -7,7 +7,7 @@
 + 边框：圆角（border-radius）边框阴影：box-shadow，border-image
 + 背景：background-size设置背景图片的尺寸，background-origin设置背景图片的原点，background-clip设置背景图片的裁剪区域，以“，”分隔可以设置多背景，用于自适应布局
 
-```
+```js
 background-size：规定背景图片的尺寸，background-size:63px 100px;
 background-origin：规定背景图片的定位区域，背景图片可以放置于 content-box、padding-box 或 border-box 区域。background-origin:content-box;
 CSS3 允许元素使用多个背景图像。background-image:url(bg_flower.gif),url(bg_flower_2.gif);
@@ -42,17 +42,9 @@ CSS3 允许元素使用多个背景图像。background-image:url(bg_flower.gif),
 
 ### 视口viewport
 
-移动端有三种类型的 viewport: layoutviewport、visualviewport、idealviewport。具体解释如下：
-
-- layoutviewport: 大于实际屏幕， 元素的宽度继承于 layoutviewport，用于保证网站的外观特性与桌面浏览器一样。layoutviewport 到底多宽，每个浏览器不同。iPhone 的 safari 为 980px，通过 document.documentElement.clientWidth 获取。
-- visualviewport: 当前显示在屏幕上的页面，即浏览器可视区域的宽度。
-- idealviewport: 为浏览器定义的可完美适配移动端的理想 viewport，固定不变，可以认为是设备视口宽度。比如 iphone 7 为 375px, iphone 7p 为 414px。
-
 ```html
 <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1,minimum-scale=1,user-scalable=no">
 ```
-
-width 设置的是 layoutviewport 的宽度 initial-scale 设置页面的初始缩放值，并且这个初始缩放值是相对于 idealviewport 缩放的，最终得到的结果不仅会决定 visualviewport，还会影响到 layoutviewport user-scalable 是否允许用户进行缩放的设置,只要 layoutviewport === visualviewport，页面下面不会出现滚动条，默认只是把页面放大或缩小。
 
 - flexible + rem
 
@@ -103,16 +95,16 @@ main{
 
 ## 判断手机横屏还是竖屏
 
-```
+```js
 window.orientation事件
 //判断手机横竖屏状态：
 function hengshuping(){
-if(window.orientation==180||window.orientation==0){
-alert("竖屏状态！")
-}
-if(window.orientation==90||window.orientation==-90){
-alert("横屏状态！")
-}
+	if(window.orientation==180||window.orientation==0){
+		alert("竖屏状态！")
+	}
+	if(window.orientation==90||window.orientation==-90){
+		alert("横屏状态！")
+	}
 }
 window.addEventListener("onorientationchange" in window ? "orientationchange" : "resize", hengshuping, false)
 ```
@@ -139,9 +131,41 @@ rpx
 
 ### 前端响应式
 
+Rem
+
+```css
+// iphone5或者更小尺寸， 以iphone5的尺寸320px进行设置
+@media screen and (max-width:374px) {
+  html{
+    font-size: 86px
+  }
+}
+// iphone6,7,x
+ @media screen and (min-width:375px) and (max-width:413px) {
+  html{
+    font-size: 100px
+  }
+}
+// 更大屏幕手机
+ @media screen and (min-width:414px){
+  html{
+    font-size: 110px
+  }
+}
+
+body{
+  // phone6,7,x
+  font-size: 0.16rem // 16px
+}
 ```
- @media screen and (min-width:800px) {
-```
+
+rem的缺点是阶梯式的
+
++ window.screen.height: 屏幕高度
++ Window.innerHeight: 网页视口高度
++ Document.body.clientHeight: body的高度
+
+
 
 # 1px产生原因
 
@@ -155,7 +179,7 @@ window.devicePixelRatio=物理像素 /CSS像素
 
 ### (1)viewport+rem
 
-```
+```js
 <script>
   var viewport = document.querySelector("meta[name=viewport]");
   //下面是根据设备像素设置viewport
@@ -249,6 +273,19 @@ box-shadow: 0  -1px 1px -1px #e5e5e5,   //上边线
 ```
 border:0.5px solid #E5E5E5
 ```
+
+# 如何画0.5px的线 
+
+??还需要考虑物理像素比吧？
+
+```html
+ <div style="width: 100px; height: 1px; background-color: #000000; transform:scaleY(0.5);"></div>
+
+```
+
+
+
+
 
 
 
