@@ -1,5 +1,110 @@
 [toc]
 
+# js web api
+
+js基础知识是ESMA 262规定， js web api是网页操作的API（W3C标准）,包括DOM、BOM、AJAX、事件绑定、事件存储
+
+# DOM
+
+文档对象模型
+
+xml是可扩展标志性语言，是一种树形结构，可以描述任何结构的数据，可以自己定义标签，可以自己扩展， html是规定了某些标签名称的xml， 比如文本必须用p标签不能用其他标签
+
+## 节点操作
+
++ 获取DOM
+  + Document.getElementsByTagName, elements复数，结果是合集
+  + Document.getElementById
+  + Document.getElementsByClassName
+  + Document.querySelectorAll
++ attribute
+  + getAttribute、setAttribute直接修改html结构
+  + p.setAttribute('data-theme', 'hh')
++ Property
+  + p = Document.getElementById之后, p.style.width, p.nodeType, p.nodeName,  js方式操作页面渲染的形式，不会体现在html结构中
++ 新增节点：div1 = document.createElement('p'),  div.appendChild(div1)
++ 移动节点：现有节点直接append就是移动div2.appendChild(div1)
++ 获取父节点： div.parentNode
++ 获取子元素： div.childNodes
++ 删除子元素： div.removeChild
+
+## DOM性能
+
+DOM操作昂贵，可以做查询缓存，频繁操作改为一次查询
+
+```JS
+const len = document.getElementsByClassName('box')
+for(let i =0;i<len;i++){
+  xxx
+}
+而不是
+for(let i =0;i<document.getElementsByClassName('box');i++){
+  xxx
+}
+```
+
+频繁操作改为一次操作， 先使用document.createDocumentFragment创建文档片段，都创建完成之后，片段再插入
+
+```js
+const con = document.createDocumentFragment()
+
+for(let i =0;i<9;i++){
+  const li = document.createElement('li')
+  li.innreHTML = 'item' + i
+  frag.appendChild(li)
+}
+const div1 = document.getElementById('div1')
+div1.appendChild(con)
+```
+
+# ajax
+
+## XMLHttpRequest
+
+- XMLHTTPRequest,ActiveXObject
+- onreadystatechange
+
+```js
+function getXHR(){
+  var xhr = null;
+  if(window.XMLHttpRequest) {// 兼容 IE7+, Firefox, Chrome, Opera, Safari
+    xhr = new XMLHttpRequest();
+  } else if (window.ActiveXObject) {
+    xhr = new ActiveXObject();
+  }else{
+      alert('您的浏览器不支持ajax请求')
+  }
+  return xhr;
+}
+
+var xhr = getXHR();
+xhr.open('GET', 'https:baidu.com',true);  //设置请求方式，url，以及是否异步
+xhr.onreadystatechange=function(){   //设置回调监听函数
+   if(xhr.readyState==4){
+        if(xhr.status==200){
+            var data=xhr.responseText;
+            console.log(data);
+   }
+  }
+}
+
+xhr.onerror = function() {
+  console.log("Oh, error");
+};
+xhr.send();  //发送请求
+xhr.send({JSON.syringify({a:'xxx'})}) // post请求
+```
+
+- 0 创建xhr,没有调用open
+- 1 调用open，没有调用send
+- 2 调用了send,已经接收了部分response header
+- 3 已经接收部分response 报文主体
+- 4 全部接收完毕，可以使用报文所有数据
+
+
+
+
+
 # 浏览器内核
 
 最初内核的概念包括渲染引擎与JS引擎，目前习惯直接称渲染引擎为内核，JS引擎独立。比如：chrome浏览器使用blink内核，V8JS引擎。
@@ -665,9 +770,9 @@ OAuth（Open Authorization）是一个关于授权（authorization）的开放�
 
 ## BOM(浏览器对象模型)
 
-### 1.navigator
+### navigator
 
-```
+```js
 var us = navigator.userAgent //判断浏览器类型
 var isChrome = us.indexOf('Chrome')
 console.log(isChrome)
@@ -720,7 +825,7 @@ uerAgent是一个很长的字符串
 
 ### history对象
 
-```
+```js
 history.go(-2) 后退两页
 history.back()
 history.forward()
@@ -734,7 +839,7 @@ history.forward()
 
 是同步的，显示这些对话框，代码停止执行，关闭之后代码继续执行
 
-```
+```js
 //alert
 alert('hello')
 //confirm 选择，按了确认和取消键进行不同的操作
