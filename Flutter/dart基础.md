@@ -218,6 +218,19 @@ a.clear();
    split() 字符串转换成LIst
 ```
 
+### firstWhere
+
+```DART
+var rejectData = res?.list?.firstWhere(
+  (item) => item.taskStatus == "250",  // 条件：taskStatus 等于 "250"
+  orElse: () => TaskListDataEntity(),  // 如果没有找到符合条件的元素
+);
+```
+
+### 任意一个对象数组
+
+List<Map<dynamic, dynamic>>? objTags;
+
 
 
 ## 6.Set 集合

@@ -393,7 +393,7 @@ function reactive(target={}){
         get: function (target, propKey, receiver) {
             // 只代理本身的属性，不代理原型上的属性， 比如数组get的时候就不去代理length这个属性
             const ownKeys =  Reflect.ownKeys(target)
-            if(ownKeys.includes(key)){
+            if(ownKeys.includes(propKey)){
                console.log(`getting ${propKey}!`);
             }
             const result = Reflect.get(target, propKey, receiver);
@@ -523,7 +523,7 @@ export default defineComponent{
 
 #### 插值
 
-jsx是单引号插入，template要用双引号, 如以下countRef
+jsx是单括号插入，template要用双括号, 如以下countRef
 
 ```vue
 <template>
@@ -721,7 +721,7 @@ export default defineCoponent(()=>{
 >+ 更好的ts支持
 >+ 更好的代码组织：composition API
 >+ 更好的逻辑抽离: composition API
->+ 更多的新功能
+>+ 更多的新功能：fragment、suspense、teleport
 
 ## 2.vue3生命周期
 

@@ -19,7 +19,7 @@
 
 + 更新不是很频繁，用v-if,
 
-+ 更新很频繁,用v-show,利用的display:none
++ 更新很频繁,用v-show,利用的是display:none
 
 ### v-for 循环遍历
 
@@ -137,7 +137,7 @@ vue是异步渲染的， data更新后，dom没有立刻更新，而是会将dat
   + mixin和组件之间可能存在多对多的关系，对应关系会非常复杂
 + composition API可以弥补这些问题
 
-```vue
+```js
 // myMixin
 export default {
    data(){
@@ -227,6 +227,8 @@ export default{
 **activated** keep-alive 专属，组件被激活时调用
 
 **deactivated** keep-alive 专属，组件被销毁时调用
+
+比如tab切换组件就会需要这两个生命周期
 
 ## 异步请求在哪一步发起
 
@@ -843,7 +845,7 @@ diff算法是为了进行前后vdom树的比较，并且在其他领域就已经
   对于旧集合里不再存在的元素，直接删除
   ```
 
-  [![image-20220413141153040](../img/image-20220413141153040-6006926.png)
+  ![image-20220413141153040](../img/image-20220413141153040-6006926.png)
 
 + vue2的diff算法：双端比较
 
@@ -1527,6 +1529,7 @@ window.addEventListener("hashchange", funcRef, false);
 	beforeEach: 在路由变化前被调用。
 	beforeResolve: 在 beforeEach 后被调用，解析完异步组件。
 	afterEach: 在路由变化后被调用。
+  // 可以进行性能指标的埋点
 
 组件守卫
   beforeRouteEnter: 在路由进入前被调用。

@@ -103,44 +103,9 @@ function fillflood(grid,i ,j){
 }
 ```
 
-# 2.[无重复字符的最长子串](https://leetcode.cn/problems/wtcaE1/)
-
-给定一个字符串 `s` ，请你找出其中不含有重复字符的 **最长连续子字符串** 的长度。
-
-```
-输入: s = "abcabcbb"
-输出: 3 
-解释: 因为无重复字符的最长子字符串是 "abc"，所以其长度为 3。
-```
-
->左右指针
->
->![image-20240217171527003](../img/image-20240217171527003.png)
->
->
-
-```js
-var lengthOfLongestSubstring = function(s) {
-    const len = s.length
-    let max = 0
-    let left = 0
-    let right = 0
-    let arr = new Set()
-    while(right<len){
-        if (!arr.has(s[right])) {
-            max = Math.max(max, right - left + 1)
-            arr.add(s[right])
-            right++
-        } else {
-            arr.delete(s[left])
-            left++
-        }
-    }
-    return max
-};
-```
-
 # 3.有效的括号
+
+
 
 https://leetcode.cn/problems/valid-parentheses/
 
@@ -291,31 +256,6 @@ function rectCover(number)
 # 5.链表
 
 ## 反转链表
-
-【JZ24】反转链表
-
-![image-20220425013312563](../img/image-20220425013312563.png)
-
-思想：每次把下一个指向next暂存起来避免指向丢失
-
-```js
-/*function ListNode(x){
-    this.val = x;
-    this.next = null;
-}*/
-function ReverseList(pHead)
-{
-    let pre = null
-    let cur = pHead
-    while(cur){
-        let next = cur.next
-        cur.next = pre
-        pre = cur
-        cur = next
-    }
-    return pre
-}
-```
 
 ## 删除链表重复元素
 
